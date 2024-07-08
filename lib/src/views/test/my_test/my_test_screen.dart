@@ -191,7 +191,9 @@ class _MyTestScreenState extends State<MyTestScreen>
       if (provider.isDownloadProgressing) {
         DownloadInfo downloadInfo = DownloadInfo(provider.downloadingIndex,
             provider.downloadingPercent, provider.total);
-        return DownloadProgressingWidget(downloadInfo);
+        return DownloadProgressingWidget(downloadInfo, reDownload: () {
+
+        }, visible: false);
       }
 
       if (provider.isGettingTestDetail) {
@@ -297,6 +299,7 @@ class _MyTestScreenState extends State<MyTestScreen>
                       builder: (_, snapshot) {
                         if (snapshot.data != null &&
                             snapshot.data!.isNotEmpty) {
+                          print(snapshot.data);
                           return AIResponseWidget(
                             url: snapshot.data ?? '',
                           );
@@ -322,6 +325,7 @@ class _MyTestScreenState extends State<MyTestScreen>
     return Consumer<MyTestProvider>(builder: (context, provider, child) {
       if (provider.needDownloadAgain) {
         return DownloadAgainWidget(
+          isOffline: isOffline,
           onClickTryAgain: () {
             if (_myTestPresenter != null) {
               _myTestPresenter!.tryAgainToDownload();
@@ -502,6 +506,12 @@ class _MyTestScreenState extends State<MyTestScreen>
   void updateAnswerFail(AlertInfo info) {
     // TODO: implement updateAnswerFail
     _loading!.hide();
+    showDialog(
+        context: context,
+        builder: (context) {
+          return MessageDialog(
+              context: context, message: info.description);
+        });
   }
 
   @override

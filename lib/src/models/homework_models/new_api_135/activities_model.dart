@@ -17,19 +17,21 @@ class ActivitiesModel {
   String? _activityType;
   int? _activityStatus;
   String? _activityTestOption;
+  int? _activityPackageId;
   ActivityAnswer? _activityAnswer;
 
   ActivitiesModel(
       {int? classId,
-      int? syllabusId,
-      int? activityId,
-      String? activityName,
-      String? activityEndTime,
-      String? activityReleaseTime,
-      String? activityType,
-      int? activityStatus,
-      String? activityTestOption,
-      ActivityAnswer? activityAnswer}) {
+        int? syllabusId,
+        int? activityId,
+        String? activityName,
+        String? activityEndTime,
+        String? activityReleaseTime,
+        String? activityType,
+        int? activityStatus,
+        String? activityTestOption,
+        int? activityPackageId,
+        ActivityAnswer? activityAnswer}) {
     _classId = classId;
     _syllabusId = syllabusId;
     _activityId = activityId;
@@ -39,6 +41,7 @@ class ActivitiesModel {
     _activityType = activityType;
     _activityStatus = activityStatus;
     _activityTestOption = activityTestOption;
+    _activityPackageId = activityPackageId;
     _activityAnswer = activityAnswer;
   }
 
@@ -63,6 +66,9 @@ class ActivitiesModel {
   String get activityTestOption => _activityTestOption ?? "";
   set activityTestOption(String activityTestOption) =>
       _activityTestOption = activityTestOption;
+  int get activityPackageId => _activityPackageId ?? 0;
+  set activityPackageId(int activityPackageId) => _activityPackageId = activityPackageId;
+
   ActivityAnswer? get activityAnswer => _activityAnswer;
   set activityAnswer(ActivityAnswer? activityAnswer) =>
       _activityAnswer = activityAnswer;
@@ -78,7 +84,7 @@ class ActivitiesModel {
 
   bool canReanswer() {
     if (_activityAnswer != null &&
-            (_activityAnswer!.aiOrder != 0 || _activityAnswer!.orderId != 0) ||
+        (_activityAnswer!.aiOrder != 0 || _activityAnswer!.orderId != 0) ||
         _activityType != 'homework') {
       return false;
     }
@@ -98,6 +104,7 @@ class ActivitiesModel {
     _activityReleaseTime = json['activity_release_time'];
     _activityType = json['activity_type'];
     _activityStatus = json['activity_status'];
+    _activityPackageId = json['activity_package_id'];
     _activityTestOption = json['activity_test_option'];
 
     _activityAnswer = json['activity_answer'] != null
@@ -116,6 +123,7 @@ class ActivitiesModel {
     data['activity_type'] = _activityType;
     data['activity_status'] = _activityStatus;
     data['activity_test_option'] = _activityTestOption;
+    data['activity_package_id'] = _activityPackageId;
     if (_activityAnswer != null) {
       data['activity_answer'] = _activityAnswer!.toJson();
     }

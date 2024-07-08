@@ -28,15 +28,15 @@ class SaveTheTestWidget extends StatelessWidget {
             children: [
               Image(
                   image: AssetImage(_getImage(simulatorTestProvider)),
-                  width: 150),
+                  width: 110),
               Text(_getTitle(simulatorTestProvider),
                   style: TextStyle(
-                      fontSize: 33,
+                      fontSize: 30,
                       fontWeight: FontWeight.bold,
                       color: simulatorTestProvider.reanswersList.isNotEmpty
                           ? AppColors.defaultPurpleColor
                           : Colors.green)),
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
               Text(
                 _getContent(simulatorTestProvider),
                 style: const TextStyle(
@@ -44,7 +44,7 @@ class SaveTheTestWidget extends StatelessWidget {
                     fontWeight: FontWeight.w500,
                     color: AppColors.defaultGrayColor),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
               SizedBox(
                 width: 250,
                 height: 40,

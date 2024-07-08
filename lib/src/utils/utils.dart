@@ -1,12 +1,14 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:crypto/crypto.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localization/flutter_localization.dart';
 import 'package:icorrect_pc/src/models/ui_models/user_authen_status.dart';
+import 'package:icorrect_pc/src/presenters/verify_presenter.dart';
 import 'package:icorrect_pc/src/providers/auth_widget_provider.dart';
 import 'package:icorrect_pc/src/providers/home_provider.dart';
 import 'package:icorrect_pc/src/providers/main_widget_provider.dart';
@@ -32,6 +34,7 @@ import '../models/simulator_test_models/question_topic_model.dart';
 import '../models/user_data_models/user_data_model.dart';
 import 'package:http/http.dart' as http;
 
+import '../views/dialogs/custom_alert_dialog_v1.dart';
 import '../views/widgets/drawer_items.dart';
 
 class Utils {
@@ -336,6 +339,49 @@ class Utils {
   void setAccessToken(String token) {
     return AppSharedPref.instance()
         .putString(key: AppSharedKeys.apiToken, value: token);
+  }
+
+  Future<String?> getMerchantID() {
+    return AppSharedPref.instance().getString(key: AppSharedKeys.merchantID);
+  }
+
+  void setMerchantID(String merchantID) {
+    AppSharedPref.instance().putString(key: AppSharedKeys.merchantID, value: merchantID);
+  }
+
+  void setLicenseKey(String licenseKey) {
+    AppSharedPref.instance().putString(key: AppSharedKeys.licenseKey, value: licenseKey);
+  }
+
+  Future<String?> getLicenseKey() {
+    return AppSharedPref.instance().getString(key: AppSharedKeys.licenseKey);
+  }
+
+  void setDeviceNameForSchool(String deviceName) {
+    AppSharedPref.instance().putString(key: AppSharedKeys.deviceName, value: deviceName);
+  }
+
+  Future<String?> getDeviceNameForSchool() {
+    return AppSharedPref.instance().getString(key: AppSharedKeys.deviceName);
+  }
+
+  Future<String> convertHMacSha256({String? param1, String? param2, String? param3}) async {
+    String? licenseKey = await getLicenseKey();
+    var key = utf8.encode(licenseKey!);
+    String paramQuery = '';
+    if (param1 != null) {
+      paramQuery += param1;
+    }
+    if (param2 != null) {
+      paramQuery += '|$param2';
+    }
+    if (param3 != null) {
+      paramQuery += '|$param3';
+    }
+    var bytes = utf8.encode(paramQuery);
+    var hmacSha256 = Hmac(sha256, key);
+    var checksum = hmacSha256.convert(bytes);
+    return checksum.toString();
   }
 
   void setCookiesTime(String saveTime) {
@@ -840,6 +886,27 @@ class Utils {
     );
   }
 
+  void showDownloadAgainSuccess(BuildContext context,
+      Function onClick) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return CustomAlertDialogV1(
+          title: Utils.instance().multiLanguage(StringConstants.dialog_title),
+          description: Utils.instance()
+              .multiLanguage(StringConstants.download_again_complete),
+          okButtonTitle: StringConstants.ok_button_title,
+          borderRadius: 8,
+          okButtonTapped: () {
+            onClick();
+            Navigator.of(context).pop();
+          },
+        );
+      },
+    );
+  }
+
   Future<bool> checkVideoFileExist(String path, MediaType mediaType) async {
     bool result = await File(path).exists();
     return result;
@@ -938,13 +1005,13 @@ class Utils {
 
     if (isExistFile) {
       file = File(path);
-      await file.writeAsString("\n", mode: FileMode.append);
+      await file.writeAsString(" \n", mode: FileMode.append);
     } else {
       file = await File(path).create();
     }
 
     try {
-      await file.writeAsString(logString, mode: FileMode.append);
+      await file.writeAsString('$logString \n \n', mode: FileMode.append);
       if (kDebugMode) {
         print("DEBUG: write log into file success");
       }

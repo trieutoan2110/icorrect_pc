@@ -14,9 +14,11 @@ import '../../../../core/app_colors.dart';
 import '../../../providers/simulator_test_provider.dart';
 
 class VideoSimulatorWidget extends StatefulWidget {
-  Function onVideoEnd;
+  // Function onVideoEnd;
 
-  VideoSimulatorWidget({super.key, required this.onVideoEnd});
+  // VideoSimulatorWidget({super.key, required this.onVideoEnd});
+
+  const VideoSimulatorWidget({super.key});
 
   @override
   State<VideoSimulatorWidget> createState() => _VideoSimulatorWidgetState();
@@ -56,14 +58,16 @@ class _VideoSimulatorWidgetState extends State<VideoSimulatorWidget> {
                     padding: const EdgeInsets.all(5),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(10),
-                      child: AspectRatio(
+                      child:
+                      AspectRatio(
                           aspectRatio: 16 / 9,
                           child:
                               provider.videoPlayController.value.isInitialized
                                   ? VideoPlayer(provider.videoPlayController)
                                   : const Image(
                                       image: AssetImage(
-                                          AppAssets.img_video_play_holder))),
+                                          AppAssets.img_video_play_holder))
+                      ),
                     ),
                   ),
                   Image.asset(AppAssets.img_paste)

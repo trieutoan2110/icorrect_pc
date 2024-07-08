@@ -43,7 +43,13 @@ class _SplashScreenState extends State<SplashScreen> implements AuthConstract {
     if (appConfigInfo.isEmpty) {
       _authPresenter!.getAppConfigInfo();
     } else {
-      _autoLogin();
+      // _autoLogin();
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (_) => const AuthWidget(),
+        ),
+        ModalRoute.withName('/'),
+      );
     }
   }
 

@@ -83,6 +83,6 @@ class MyTestImpl implements MyTestRepository {
         .then((http.Response response) {
       final String jsonBody = response.body;
       return jsonBody;
-    });
+    }).timeout(const Duration(seconds: 10));
   }
 }

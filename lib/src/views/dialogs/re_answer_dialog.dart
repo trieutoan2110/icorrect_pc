@@ -1,13 +1,17 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:icorrect_pc/core/app_assets.dart';
 import 'package:icorrect_pc/core/app_colors.dart';
 import 'package:icorrect_pc/src/data_source/constants.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 
 import '../../data_source/local/file_storage_helper.dart';
+import '../../models/log_models/log_model.dart';
+import '../../models/simulator_test_models/file_topic_model.dart';
 import '../../models/simulator_test_models/question_topic_model.dart';
 import '../../providers/re_answer_provider.dart';
 import '../../utils/utils.dart';
@@ -17,15 +21,16 @@ import 'package:record/record.dart';
 class ReAnswerDialog extends Dialog {
   final BuildContext _context;
   final QuestionTopicModel _question;
+  final int _indexReanswer;
   Timer? _countDown;
   int _timeRecord = 30;
   late Record _record;
   String _filePath = '';
   String _fileName = '';
   final String _currentTestId;
-  final Function(QuestionTopicModel question) _finishReanswerCallback;
+  final Function(QuestionTopicModel question, int index) _finishReanswerCallback;
 
-  ReAnswerDialog(this._context, this._question, this._currentTestId,
+  ReAnswerDialog(this._context, this._question, this._currentTestId, this._indexReanswer,
       this._finishReanswerCallback,
       {super.key});
 
@@ -123,7 +128,7 @@ class ReAnswerDialog extends Dialog {
                   return Expanded(
                       child: ElevatedButton(
                     onPressed: () {
-                      _finishReAnswer(_question);
+                      _finishReAnswerSimulatorTest(_question);
                     },
                     style: ButtonStyle(
                       backgroundColor: _canFinishReanswer()
@@ -159,16 +164,63 @@ class ReAnswerDialog extends Dialog {
     );
   }
 
-  void _finishReAnswer(QuestionTopicModel question) {
+  Future<void> _finishReAnswerSimulatorTest(QuestionTopicModel question) async {
     if (_canFinishReanswer()) {
-      question.answers.last.url = _fileName;
-      question.reAnswerCount = question.reAnswerCount + 1;
-      _record.stop();
-      _countDown!.cancel();
-      _finishReanswerCallback(question);
+      if (question.answers.isNotEmpty) {
+        question.answers[_indexReanswer].url = _fileName;
+        question.reAnswerCount = question.reAnswerCount + 1;
+        _record.stop();
+        _countDown!.cancel();
+        _finishReanswerCallback(question, _indexReanswer);
+      } else {
+        FileTopicModel answer = FileTopicModel(url: _fileName);
+        question.answers = [answer];
+        question.repeatIndex = 0;
+        _record.stop();
+        _countDown!.cancel();
+        _finishReanswerCallback(question, _indexReanswer);
+      }
+
+      Map<String, dynamic> info = {
+        StringConstants.k_question_content: question.content,
+        StringConstants.k_file_audio_path: _filePath,
+        // StringConstants.k_size_file_audio: await File(_filePath).length()
+      };
+
+      _createLog(action: LogEvent.actionFinishReAnswer, data: info);
+
       Navigator.pop(_context);
     }
   }
+
+  // Future<void> _finishReAnswer(QuestionTopicModel question) async {
+  //   if (_canFinishReanswer()) {
+  //     if (question.answers.isNotEmpty) {
+  //       question.answers.last.url = _fileName;
+  //       question.reAnswerCount = question.reAnswerCount + 1;
+  //       _record.stop();
+  //       _countDown!.cancel();
+  //       _finishReanswerCallback(question);
+  //     } else {
+  //       FileTopicModel answer = FileTopicModel(url: _fileName);
+  //       question.answers = [answer];
+  //       question.repeatIndex = 0;
+  //       _record.stop();
+  //       _countDown!.cancel();
+  //       _finishReanswerCallback(question);
+  //     }
+  //
+  //     Map<String, dynamic> info = {
+  //       StringConstants.k_question_content: question.content,
+  //       StringConstants.k_file_audio_path: _filePath,
+  //       // StringConstants.k_size_file_audio: await File(_filePath).length()
+  //     };
+  //
+  //     _createLog(action: LogEvent.actionFinishReAnswer, data: info);
+  //
+  //     Navigator.pop(_context);
+  //   }
+  // }
 
   bool _canFinishReanswer() {
     int timeCounting =
@@ -183,6 +235,11 @@ class ReAnswerDialog extends Dialog {
     _record.stop();
     _countDown!.cancel();
     // ignore: use_build_context_synchronously
+    Map<String, dynamic> info = {
+
+    };
+
+    _createLog(action: LogEvent.actionCancelReanswer, data: info);
     Navigator.pop(_context);
   }
 
@@ -200,13 +257,24 @@ class ReAnswerDialog extends Dialog {
     _filePath =
         '${await FileStorageHelper.getFolderPath(MediaType.audio, null)}'
         '\\$_fileName';
+
     if (await _record.hasPermission()) {
+
+      Map<String, dynamic> info = {
+        StringConstants.k_question_content: _question.content,
+        StringConstants.k_file_audio_path: _fileName
+      };
+
+      _createLog(action: LogEvent.startRecordReanswer, data: info);
+
       await _record.start(
         path: _filePath,
         encoder: Platform.isWindows ? AudioEncoder.wav : AudioEncoder.pcm16bit,
         bitRate: 128000,
         samplingRate: 44100,
       );
+    } else {
+      await openAppSettings();
     }
   }
 
@@ -231,8 +299,24 @@ class ReAnswerDialog extends Dialog {
 
       if (count == 0 && !finishCountDown) {
         finishCountDown = true;
-        _finishReAnswer(_question);
+        _finishReAnswerSimulatorTest(_question);
       }
     });
+  }
+
+  void _createLog(
+      {required String action, required Map<String, dynamic>? data}) async {
+    if (_context.mounted) {
+      //Add action log
+      LogModel actionLog =
+      await Utils.instance().prepareToCreateLog(_context, action: action);
+      if (null != data) {
+        if (data.isNotEmpty) {
+          actionLog.addData(
+              key: StringConstants.k_data, value: jsonEncode(data));
+        }
+      }
+      Utils.instance().addLog(actionLog, LogEvent.none);
+    }
   }
 }

@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:icorrect_pc/src/presenters/verify_presenter.dart';
 import 'package:icorrect_pc/src/providers/home_provider.dart';
 import 'package:icorrect_pc/src/providers/main_widget_provider.dart';
 import 'package:icorrect_pc/src/providers/my_practice_tests_provider.dart';
 import 'package:icorrect_pc/src/providers/practice_screen_provider.dart';
+import 'package:icorrect_pc/src/views/dialogs/enter_text_dialog.dart';
 import 'package:icorrect_pc/src/views/screens/auth/change_password_screen.dart';
+import 'package:icorrect_pc/src/views/screens/home/list_syllabus_screen.dart';
 import 'package:icorrect_pc/src/views/test/my_practice_tests/my_practice_tests.dart';
 import 'package:provider/provider.dart';
 
@@ -14,6 +17,7 @@ import '../../utils/utils.dart';
 import '../dialogs/confirm_dialog.dart';
 import '../dialogs/language_selection_dialog.dart';
 import '../screens/home/home_screen.dart';
+import '../screens/home/list_class_screen.dart';
 import '../screens/practice/practice_screen.dart';
 import '../screens/video_authentication/user_auth_status_detail_widget.dart';
 
@@ -191,7 +195,6 @@ Widget navbarItems(
                       Utils.instance().clearCurrentUser();
                       Utils.instance().setAccessToken('');
                       Navigations.instance().goToAuthWidget(context);
-                      
                     });
               });
         },

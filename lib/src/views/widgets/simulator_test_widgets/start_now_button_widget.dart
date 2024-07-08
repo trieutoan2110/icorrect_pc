@@ -2,11 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:icorrect_pc/src/data_source/constants.dart';
 import 'package:icorrect_pc/src/utils/utils.dart';
 
-class StartNowButtonWidget extends StatelessWidget {
-  const StartNowButtonWidget({super.key, required this.startNowButtonTapped});
+class StartNowButtonWidget extends StatefulWidget {
+  const StartNowButtonWidget({super.key, required this.startNowButtonTapped, required this.isDownloadSuccess});
 
   final Function startNowButtonTapped;
+  final bool isDownloadSuccess;
 
+  @override
+  State<StartNowButtonWidget> createState() => _StartNowButtonWidgetState();
+}
+
+class _StartNowButtonWidgetState extends State<StartNowButtonWidget> {
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -14,7 +20,8 @@ class StartNowButtonWidget extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text(
-          Utils.instance()
+          widget.isDownloadSuccess? Utils.instance()
+              .multiLanguage(StringConstants.start_now) : Utils.instance()
               .multiLanguage(StringConstants.download_file_description),
           style: const TextStyle(fontSize: 15),
         ),
@@ -26,7 +33,7 @@ class StartNowButtonWidget extends StatelessWidget {
           child: Center(
             child: InkWell(
               onTap: () {
-                startNowButtonTapped();
+                widget.startNowButtonTapped();
               },
               child: Text(
                 Utils.instance()

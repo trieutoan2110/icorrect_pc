@@ -15,12 +15,11 @@ import '../../../providers/timer_provider.dart';
 
 class TestRecordWidget extends StatelessWidget {
   const TestRecordWidget(
-      {super.key,
-      required this.finishAnswer,
+      {super.key,required this.onFinishAnswer,
       required this.repeatQuestion,
-      required this.simulatorTestProvider});
+      required this.simulatorTestProvider, });
 
-  final Function(QuestionTopicModel questionTopicModel) finishAnswer;
+  final Function(QuestionTopicModel questionTopicModel) onFinishAnswer;
   final Function(QuestionTopicModel questionTopicModel) repeatQuestion;
   final SimulatorTestProvider simulatorTestProvider;
 
@@ -44,17 +43,17 @@ class TestRecordWidget extends StatelessWidget {
               alignment: Alignment.center,
               child: Column(
                 children: [
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 15),
                   Text(
                     Utils.instance()
                         .multiLanguage(StringConstants.answer_being_recorded),
                     style: const TextStyle(fontSize: 23),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 15),
                   Image.asset(
                     AppAssets.img_micro,
-                    width: 100,
-                    height: 100,
+                    width: 80,
+                    height: 80,
                   ),
                   const SizedBox(height: 5),
                   Consumer<SimulatorTestProvider>(
@@ -105,13 +104,14 @@ class TestRecordWidget extends StatelessWidget {
       hoverColor: Colors.transparent,
       onTap: () {
         if (!_lessThan2s(simulatorTestProvider, playListModel)) {
-          finishAnswer(questionTopicModel);
+          onFinishAnswer(questionTopicModel);
         }
       },
       child: Wrap(
         children: [
           Container(
             height: 44,
+            width: 130,
             padding: const EdgeInsets.symmetric(horizontal: 10),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(22),
@@ -141,12 +141,13 @@ class TestRecordWidget extends StatelessWidget {
       splashColor: Colors.transparent,
       hoverColor: Colors.transparent,
       onTap: () {
-        if (!_lessThan2s(simulatorTestProvider, playListModel)) {
-          repeatQuestion(questionTopicModel);
-        }
+        // if (!_lessThan2s(simulatorTestProvider, playListModel)) {
+        //   repeatQuestion(questionTopicModel);
+        // }
+        repeatQuestion(questionTopicModel);
       },
       child: Container(
-        width: 100,
+        width: 130,
         height: 44,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(22),

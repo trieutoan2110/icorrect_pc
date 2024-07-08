@@ -7,11 +7,19 @@ import '../../../core/app_colors.dart';
 import '../../presenters/my_test_presenter.dart';
 import '../../presenters/simulator_test_presenter.dart';
 
-class DownloadAgainWidget extends StatelessWidget {
-  const DownloadAgainWidget({super.key, required this.onClickTryAgain});
+class DownloadAgainWidget extends StatefulWidget {
+  DownloadAgainWidget({super.key, required this.onClickTryAgain, required this.isOffline, this.visibleText, this.message});
 
   final Function onClickTryAgain;
+  final bool isOffline;
+  bool? visibleText;
+  String? message;
 
+  @override
+  State<DownloadAgainWidget> createState() => _DownloadAgainWidgetState();
+}
+
+class _DownloadAgainWidgetState extends State<DownloadAgainWidget> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -35,8 +43,7 @@ class DownloadAgainWidget extends StatelessWidget {
                   left: 40, top: 10, right: 40, bottom: 10),
               child: Center(
                 child: Text(
-                  Utils.instance().multiLanguage(
-                      StringConstants.data_downloaded_error_message),
+                setMessage(),
                   textAlign: TextAlign.center,
                   style: const TextStyle(fontSize: 17),
                 ),
@@ -45,7 +52,7 @@ class DownloadAgainWidget extends StatelessWidget {
             //Try Again button
             InkWell(
               onTap: () {
-                onClickTryAgain();
+                widget.onClickTryAgain();
               },
               child: SizedBox(
                 width: 100,
@@ -67,5 +74,14 @@ class DownloadAgainWidget extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String setMessage() {
+    if (widget.message != null) {
+      return widget.message!;
+    } else {
+      return Utils.instance().multiLanguage(
+          widget.isOffline ? StringConstants.error_during_test_offline : StringConstants.error_during_test_hasInternet);
+    }
   }
 }

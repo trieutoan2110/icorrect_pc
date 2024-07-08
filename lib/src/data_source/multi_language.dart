@@ -117,6 +117,7 @@ class MultiLanguage {
     StringConstants.video_example_title: "Video Tham Khảo : ",
     StringConstants.you_should_say_content: "Bạn Nên Nói : ",
     StringConstants.example_title: "Ví Dụ",
+    StringConstants.verify_button_title: 'Xác thực',
     StringConstants.sign_in_button_title: "Đăng Nhập",
     StringConstants.sign_up_button_title: "Đăng Ký",
     StringConstants.forgot_password_button_title: "Quên Mật Khẩu ?",
@@ -140,6 +141,7 @@ class MultiLanguage {
     StringConstants.save_the_exam_button_title: "LƯU BÀI THI",
     StringConstants.start_now_button_title: "Bắt Đầu Ngay",
     StringConstants.repeat_button_title: "Nhắc Lại",
+    StringConstants.re_load_button_title: 'Tải lại',
     StringConstants.exit_button_title: "Thoát",
     StringConstants.later_button_title: "Để Sau",
     StringConstants.submit_button_title: "Nộp",
@@ -197,6 +199,7 @@ class MultiLanguage {
     StringConstants.filter_choose_status_tab_title: "CHOOSE STATUS",
 
     //Text
+    StringConstants.select_class: 'Lựa chọn lớp của bạn!',
     StringConstants.add_your_filter: "Add your filter!",
     StringConstants.cue_card: "Thẻ Gợi Ý",
     StringConstants.another_tips: "Gợi Ý Khác",
@@ -236,6 +239,7 @@ class MultiLanguage {
             "Nếu không cấp phép, bạn sẽ không thể tiếp tục bài kiểm tra.",
     StringConstants.start_now_description:
         "Bạn có thể bắt đầu bài kiểm tra ngay hoặc chờ đến khi quá trình tải dữ liệu hoàn thành!",
+    StringConstants.start_now: 'Tải dữ liệu hoàn tất, bấm vào bắt đầu ngay để tiếp tục làm bài!',
     StringConstants.part_1_header: "Phần I",
     StringConstants.part_2_header: "Phần 2",
     StringConstants.part_3_header: "Phần 3",
@@ -246,6 +250,7 @@ class MultiLanguage {
     StringConstants.home_menu_item_title: "Màn Hình Chính",
     StringConstants.old_password_title: "Mật Khẩu Cũ",
     StringConstants.logout_menu_item_title: "Đăng Xuất",
+    StringConstants.syllabus_list: 'Danh sách giáo trình',
     StringConstants.email: "Email",
     StringConstants.logo_text: "REACH YOUR DREAM TARGET",
     StringConstants.password: "Mật Khẩu",
@@ -348,6 +353,13 @@ class MultiLanguage {
     StringConstants.login_wrong_message:
         "Email hoặc mật khẩu không đúng. Vui lòng thử lại!",
 
+    StringConstants.error_during_test_hasInternet:
+    'Một phần dữ liệu chưa được tải xong, Vui lòng bấm tải lại và chờ giây lát trước khi quay trở lại làm bài!',
+    StringConstants.error_during_test_offline:
+    'Một phần dữ liệu chưa được tải xong,Vui lòng kiểm tra lại kết nối mạng và bấm tải lại !',
+    StringConstants.error_during_test_click_redownload_offline : 'Kết nối mạng không ổn định, vui lòng kiểm tra lại và thử lại !',
+    StringConstants.error_during_test_click_redownload_hasInternet : 'Dữ liệu đang được tải lại, vui lòng chờ trong giây lát trước khi quay trở lại làm bài!',
+    StringConstants.download_again_complete: 'Dữ liệu đã hoàn tất, vui lòng tiếp tục hoàn thành bài làm !',
     StringConstants.download_test_fail_title: 'Xảy ra lỗi khi tải bài làm!',
     StringConstants.download_test_fail_message:
         "Không thể tải video. Vui lòng thử lại!",
@@ -372,6 +384,7 @@ class MultiLanguage {
         'Đã xảy ra lỗi. Vui lòng kiểm tra lại internet và thử lại!',
     StringConstants.video_not_found_message:
         'Không tìm thấy dữ liệu video tiếp theo. Vui lòng kiểm tra kết nối mạng của bạn và thử lại',
+
   };
 
   static const Map<String, dynamic> EN = {
@@ -490,6 +503,7 @@ class MultiLanguage {
     StringConstants.video_example_title: "Video Example : ",
     StringConstants.you_should_say_content: "You should say : ",
     StringConstants.example_title: "Example",
+    StringConstants.verify_button_title: 'Verify',
     StringConstants.sign_in_button_title: "Sign In",
     StringConstants.sign_up_button_title: "Sign Up",
     StringConstants.forgot_password_button_title: "Forgot password?",
@@ -568,6 +582,7 @@ class MultiLanguage {
     StringConstants.filter_choose_status_tab_title: "CHOOSE STATUS",
 
     //Text
+    StringConstants.select_class : 'Select your class',
     StringConstants.add_your_filter: "Add your filter!",
     StringConstants.cue_card: "Cue Card",
     StringConstants.another_tips: "Another tips",
@@ -605,6 +620,7 @@ class MultiLanguage {
         "This app needs to grant access to the microphone in order to record the answers during the exam process. Without granting permission, you will not be able to proceed with the exam.",
     StringConstants.start_now_description:
         "Start the exam now or wait until the processing finished!",
+    StringConstants.start_now : 'Data download is complete, click start now to continue working!',
     StringConstants.part_1_header: "Practice Part 1",
     StringConstants.part_2_header: "Practice Part 2",
     StringConstants.part_3_header: "Practice Part 3",
@@ -615,6 +631,7 @@ class MultiLanguage {
     StringConstants.home_menu_item_title: "Home",
     StringConstants.old_password_title: "Old Password",
     StringConstants.logout_menu_item_title: "Logout",
+    StringConstants.syllabus_list: 'List syllabus',
     StringConstants.email: "Email",
     StringConstants.logo_text: "REACH YOUR DREAM TARGET",
     StringConstants.password: "Password",
@@ -714,7 +731,11 @@ class MultiLanguage {
         "ClientException: Has an error when submit this test!",
     StringConstants.get_special_homework_error_message:
         "GetSpecialHomeWorks: result fail!",
-
+    StringConstants.error_during_test_hasInternet :
+    'Part of the data has not been loaded yet. Please wait a moment to reload before returning to work!',
+    StringConstants.error_during_test_click_redownload_offline: 'Network connection is unstable, please check and try again!',
+    StringConstants.error_during_test_click_redownload_hasInternet : 'Data is being reloaded, please wait a moment before returning to work!',
+    StringConstants.download_again_complete : 'The data is complete, please continue to complete the assignment!',
     StringConstants.download_test_fail_title: 'Fail to load your test',
     StringConstants.download_test_fail_message:
         "Can not download video. Please try again!",
@@ -738,6 +759,8 @@ class MultiLanguage {
     StringConstants.network_fail_to_submit:
         'Error! An error occurred.Please check your internet and click Save The Test again',
     StringConstants.old_password_equals_new_password_error_message:
-        "The new password must be different from the old password!"
+        "The new password must be different from the old password!",
+    StringConstants.error_during_test_offline :
+  'Part of the data has not been downloaded yet, please check your network connection and click reload!'
   };
 }

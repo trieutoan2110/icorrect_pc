@@ -3,15 +3,19 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:video_player/video_player.dart';
 
 import '../constants.dart';
 
 class FileStorageHelper {
   static Future<String> getExternalDocumentPath() async {
-    Directory directory = Directory('');
-    directory = await getApplicationDocumentsDirectory();
-
-    final exPath = directory.path;
+    Directory? directory = Directory('');
+    // directory = await getExternalStorageDirectory();
+    // directory = await getDownloadsDirectory();
+    directory = await getApplicationSupportDirectory();
+    // directory = await getApplicationDocumentsDirectory();
+    String exPath = directory.path;
+    exPath += '/icorrect_log';
     if (kDebugMode) {
       print("DEBUG: Saved Path: $exPath");
     }
@@ -50,6 +54,30 @@ class FileStorageHelper {
     } else {
       filePath = '$path\\$folder';
     }
+
+    Directory hideDirectory = Directory(filePath);
+    if (!hideDirectory.existsSync()) {
+      hideDirectory.createSync();
+    }
+    return hideDirectory.path;
+  }
+
+  static Future<String> getFolderSyllabusPath(
+      MediaType mediaType, String syllabus) async {
+    final path = await _getRootPath;
+
+    String folder = '';
+    if (mediaType == MediaType.video) {
+      folder = StringClass.video;
+    } else if (mediaType == MediaType.audio) {
+      folder = StringClass.audio;
+    } else {
+      folder = StringClass.image;
+    }
+
+    String filePath = '';
+
+    filePath = '$path\\$folder\\$syllabus';
 
     Directory hideDirectory = Directory(filePath);
     if (!hideDirectory.existsSync()) {
@@ -117,11 +145,80 @@ class FileStorageHelper {
     return result;
   }
 
+  static Future<bool> newCheckExistFile(String fileName, MediaType mediaType) async {
+    final path = await getFolderPath(mediaType, null);
+    try {
+      await for (var entity in Directory(path).list(recursive: true, followLinks: false)) {
+        if (entity is File && entity.path.endsWith(fileName)) {
+          return true;
+        }
+      }
+    } catch (e) {
+      print('Có lỗi xảy ra: $e');
+    }
+    return false;
+  }
+
   static Future<String> getFilePath(
       String fileName, MediaType mediaType, String? testId) async {
     final path = await getFolderPath(mediaType, testId);
     String filePath = '$path\\$fileName';
     return filePath;
+  }
+
+  static Future<String> newGetFilePath(String fileName, MediaType mediaType) async {
+    final path = await getFolderPath(mediaType, null);
+    try {
+      await for (var entity in Directory(path).list(recursive: true, followLinks: false)) {
+        if (entity is File && entity.path.endsWith(fileName)) {
+          return entity.path;
+        }
+      }
+    } catch (e) {
+      print('Có lỗi xảy ra: $e');
+    }
+    return '';
+  }
+
+  static Future<double> getSizeFolder(String folderName) async {
+    double totalSize = 0.00;
+    final path = await getFolderPath(MediaType.video, null);
+    String folderPath = '$path\\$folderName';
+
+    if (await Directory(folderPath).exists()) {
+      // List all files and directories in the directory
+      List<FileSystemEntity> entities = Directory(folderPath).listSync(recursive: true, followLinks: false);
+
+      // Iterate over each entity
+      for (FileSystemEntity entity in entities) {
+        if (entity is File) {
+          // If it's a file, add its size to the total size
+          totalSize += await entity.length();
+        }
+      }
+    }
+    return totalSize;
+  }
+
+  static Future<bool> deleteFolder(String folderName) async {
+    try {
+      final path = await getFolderPath(MediaType.video, null);
+      String folderPath = '$path\\$folderName';
+      if (await Directory(folderPath).exists()) {
+        await for (var entity in Directory(folderPath).list(recursive: true, followLinks: false)) {
+          if (entity is File) {
+            await entity.delete();
+          }
+        }
+        await Directory(folderPath).delete();
+      }
+      return true;
+    } catch (e) {
+      if (kDebugMode) {
+        print('DEBUG: Error when delete folder: ${e.toString()}');
+      }
+      return false;
+    }
   }
 
   static Future<bool> deleteFile(
@@ -146,6 +243,9 @@ class FileStorageHelper {
       File file = File(path);
       if (await file.exists()) {
         await file.delete();
+        if (kDebugMode) {
+          print('DEBUG: delete file: $path');
+        }
       }
       return true;
     } catch (e) {

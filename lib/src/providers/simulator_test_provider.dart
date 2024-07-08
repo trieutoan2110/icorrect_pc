@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:icorrect_pc/src/models/auth_models/video_record_exam_info.dart';
+import 'package:icorrect_pc/src/models/simulator_test_models/file_path_model.dart';
 import 'package:video_player/video_player.dart';
 
 import '../data_source/constants.dart';
@@ -59,6 +60,28 @@ class SimulatorTestProvider extends ChangeNotifier {
 
   void setStartNowStatus(bool available) {
     _startNowAvailable = available;
+
+    if (!isDisposed) {
+      notifyListeners();
+    }
+  }
+
+  bool _isTestRoom = false;
+  bool get isTestRoom => _isTestRoom;
+
+  void setIsTestRoom(bool isTestRoom) {
+    _isTestRoom = isTestRoom;
+
+    if (!isDisposed) {
+      notifyListeners();
+    }
+  }
+
+  bool _downloadFullData = false;
+  bool get downloadFullData => _downloadFullData;
+
+  void setDownloadFullData(bool downloadFullData) {
+    _downloadFullData = downloadFullData;
 
     if (!isDisposed) {
       notifyListeners();
@@ -178,6 +201,25 @@ class SimulatorTestProvider extends ChangeNotifier {
     _activityType = type;
   }
 
+  List<FilePathModel> _listSavePath = [];
+  List<FilePathModel> get listSavePath => _listSavePath;
+
+  void setListSavePath(FilePathModel savePath) {
+    _listSavePath.add(savePath);
+
+    if (!isDisposed) {
+      notifyListeners();
+    }
+  }
+
+  void deleteSavePathFromList(FilePathModel savePath) {
+    _listSavePath.removeWhere((e) => e.savePath == savePath.savePath);
+
+    if (!isDisposed) {
+      notifyListeners();
+    }
+  }
+
   SubmitStatus _submitStatus = SubmitStatus.none;
 
   SubmitStatus get submitStatus => _submitStatus;
@@ -196,6 +238,17 @@ class SimulatorTestProvider extends ChangeNotifier {
 
   void setCurrentTestDetail(TestDetailModel testDetailModel) {
     _currentTestDetail = testDetailModel;
+  }
+
+  int _packageID = 0;
+  int get packageID => _packageID;
+
+  void setPackageID(int packageID) {
+    _packageID = packageID;
+
+    if (!isDisposed) {
+      notifyListeners();
+    }
   }
 
   final List<String> _answerList = [];
@@ -225,6 +278,17 @@ class SimulatorTestProvider extends ChangeNotifier {
 
   void setNeedDownloadAgain(bool need) {
     _needDownloadAgain = need;
+
+    if (!isDisposed) {
+      notifyListeners();
+    }
+  }
+
+  bool _visibleDownloadAgain = false;
+  bool get visibleDownloadAgain => _visibleDownloadAgain;
+
+  void setVisibleDownloadAgain(bool visible) {
+    _visibleDownloadAgain = visible;
 
     if (!isDisposed) {
       notifyListeners();
@@ -582,6 +646,21 @@ class SimulatorTestProvider extends ChangeNotifier {
     }
   }
 
+  String? _currentFileVideo;
+  String? get currentFileVideo => _currentFileVideo;
+  void setCurrentFileVideo(String filePath) {
+    _currentFileVideo = filePath;
+  }
+
+  String? _currentFileRecord;
+  String? get currentFileRecord => _currentFileRecord;
+  void setCurrentFileRecord(String filePath) {
+    _currentFileRecord = filePath;
+    if (!isDisposed) {
+      notifyListeners();
+    }
+  }
+
   int _repeatTimes = 0;
 
   int get repeatTimes => _repeatTimes;
@@ -699,6 +778,17 @@ class SimulatorTestProvider extends ChangeNotifier {
   void setCurrentQuestion(QuestionTopicModel question) {
     _currentQuestion = question;
     if (!isDisposed) {
+      notifyListeners();
+    }
+  }
+
+  String? _currentContent;
+  String? get currentContent => _currentContent;
+
+  void setCurrentContent(String currentContent) {
+    _currentContent = currentContent;
+
+    if(!isDisposed) {
       notifyListeners();
     }
   }
@@ -846,7 +936,6 @@ class SimulatorTestProvider extends ChangeNotifier {
     _videoPlayerController = null;
     _currentQuestion = QuestionTopicModel();
     _indexOfCurrentQuestion = 0;
-
     _currentCount = 1000;
     _strCountCueCard = "";
     _currentQuestion = QuestionTopicModel();
@@ -877,6 +966,12 @@ class SimulatorTestProvider extends ChangeNotifier {
     clearQuestionList();
     resetTopicsList();
     resetTopicsQueue();
+    _visibleDownloadAgain = false;
+    _isTestRoom = false;
+    _downloadFullData = false;
+    _listSavePath.clear();
+    _packageID = 0;
+
     if (!isDisposed) {
       notifyListeners();
     }

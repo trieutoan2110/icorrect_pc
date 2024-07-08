@@ -217,7 +217,13 @@ class OtherTestDetailPresenter {
   }
 
   MediaType _mediaType(String type) {
-    return (type == StringClass.audio) ? MediaType.audio : MediaType.video;
+    if (type == StringClass.audio) {
+      return MediaType.audio;
+    } else if (type == StringClass.image) {
+      return MediaType.image;
+    } else {
+      return MediaType.video;
+    }
   }
 
   double _getPercent(int downloaded, int total) {
@@ -231,7 +237,7 @@ class OtherTestDetailPresenter {
 
     //Add question files
     for (QuestionTopicModel q in topic.questionList) {
-      allFiles.add(q.files.first);
+      allFiles.addAll(q.files);
       allFiles.addAll(q.answers);
     }
 
@@ -285,7 +291,7 @@ class OtherTestDetailPresenter {
                 value: json.encode(fileDownloadInfo));
           }
           String fileType = Utils.instance().fileType(fileTopic);
-
+          MediaType mediaType = Utils.instance().mediaType(fileTopic);
           if (_mediaType(fileType) == MediaType.audio) {
             fileNameForDownload = fileTopic;
             fileTopic = Utils.instance().convertFileName(fileTopic);
@@ -306,7 +312,7 @@ class OtherTestDetailPresenter {
               }
               dio!.head(url).timeout(const Duration(seconds: 10));
               String savePath =
-                  '${await FileStorageHelper.getFolderPath(_mediaType(fileType), null)}\\$fileTopic';
+                  '${await FileStorageHelper.getFolderPath(mediaType, null)}\\$fileTopic';
               Response response = await dio!.download(url, savePath);
 
               if (response.statusCode == 200) {

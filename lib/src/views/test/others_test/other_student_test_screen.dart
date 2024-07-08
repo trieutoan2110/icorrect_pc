@@ -155,7 +155,8 @@ class _OtherStudentTestScreenState extends State<OtherStudentTestScreen>
       if (provider.isDownloadProgressing) {
         DownloadInfo downloadInfo = DownloadInfo(provider.downloadingIndex,
             provider.downloadingPercent, provider.total);
-        return DownloadProgressingWidget(downloadInfo);
+        return DownloadProgressingWidget(downloadInfo, reDownload: () {
+        }, visible: false);
       }
 
       if (provider.isGettingTestDetail) {
@@ -229,6 +230,7 @@ class _OtherStudentTestScreenState extends State<OtherStudentTestScreen>
     return Consumer<StudentTestProvider>(builder: (context, provider, child) {
       if (provider.needDownloadAgain) {
         return DownloadAgainWidget(
+          isOffline: isOffline,
           onClickTryAgain: () {
             if (_presenter != null) {
               _presenter!.tryAgainToDownload();

@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 import '../providers/my_test_provider.dart';
 import '../views/screens/auth/login_screen.dart';
 import '../views/screens/main_screen_manager.dart';
+import '../views/screens/verify/verify_login_screen.dart';
 import '../views/test/my_test/my_test_screen.dart';
 import '../views/test/simulator_test/simulator_test_screen.dart';
 
@@ -21,6 +22,12 @@ class Navigations {
   void goToLogin(BuildContext context) {
     Navigator.push(
         context, MaterialPageRoute(builder: (context) => const LoginWidget()));
+  }
+
+
+  void goToLoginClassID(BuildContext context) {
+    Navigator.push(
+        context, MaterialPageRoute(builder: (context) => const LoginVerifyWidget()));
   }
 
   // void goToRegister(BuildContext context) {

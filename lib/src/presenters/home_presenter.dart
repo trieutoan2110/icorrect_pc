@@ -4,12 +4,12 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:icorrect_pc/src/data_source/local/app_shared_preferences_keys.dart';
+import 'package:icorrect_pc/src/data_source/local/app_shared_references.dart';
 import '../data_source/constants.dart';
 import '../data_source/dependency_injection.dart';
 import '../data_source/repositories/auth_repository.dart';
 import '../data_source/repositories/homework_repository.dart';
-import '../models/homework_models/class_model.dart';
-import '../models/homework_models/homework_model.dart';
 import '../models/homework_models/new_api_135/activities_model.dart';
 import '../models/homework_models/new_api_135/new_class_model.dart';
 import '../models/log_models/log_model.dart';
@@ -64,8 +64,6 @@ class HomeWorkPresenter {
         if (dataMap['error_code'] == 200) {
           List<NewClassModel> classes =
               await _generateListNewClass(dataMap['data']);
-          List<ActivitiesModel> homeworks =
-              await _generateListHomeWork(classes);
 
           //Add log
           Utils.instance().prepareLogData(
@@ -74,8 +72,17 @@ class HomeWorkPresenter {
             message: null,
             status: LogEvent.success,
           );
+          List<NewClassModel> classByID = [];
+          for (NewClassModel classModel in classes) {
+            String id = await AppSharedPref.instance().getString(key: AppSharedKeys.classID);
+            if (classModel.id.toString() == id) {
+              classByID.add(classModel);
+            }
+          }
+          List<ActivitiesModel> homeworks =
+          await _generateListHomeWork(classByID);
           _view!.onGetListHomeworkComplete(
-              homeworks, classes, dataMap['current_time']);
+              homeworks, classByID, dataMap['current_time']);
         } else {
           Utils.instance().prepareLogData(
             log: log,

@@ -36,6 +36,7 @@ class _CueCardWidgetState extends State<CueCardWidget> {
                   Center(
                     child: Text(
                       Utils.instance().multiLanguage(StringConstants.cue_card),
+                      textAlign: TextAlign.center,
                       style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
@@ -57,6 +58,7 @@ class _CueCardWidgetState extends State<CueCardWidget> {
                   const SizedBox(height: 5),
                   Text(
                     provider.currentPlay.questionContent,
+                    textAlign: TextAlign.center,
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,

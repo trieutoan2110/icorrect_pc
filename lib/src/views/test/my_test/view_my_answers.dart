@@ -50,6 +50,15 @@ class _ViewMyAnswersState extends State<ViewMyAnswers> {
   }
 
   @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
+    if (_audioPlayer != null) {
+      _audioPlayer!.dispose();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     w = MediaQuery.of(context).size.width;
     h = MediaQuery.of(context).size.height;
@@ -122,7 +131,7 @@ class _ViewMyAnswersState extends State<ViewMyAnswers> {
                           child: Text(
                             Utils.instance().multiLanguage(
                                 StringConstants.update_your_test),
-                            style: const TextStyle(fontSize: 18),
+                            style: const TextStyle(fontSize: 18, color: Colors.white),
                           ),
                         ),
                       )
@@ -137,6 +146,7 @@ class _ViewMyAnswersState extends State<ViewMyAnswers> {
 
   Widget _buildQuestionList() {
     return Consumer<MyTestProvider>(builder: (context, provider, child) {
+      print(provider.questionsList.last.answers.length);
       return TestQuestionWidget(
           isExam: false,
           testId: widget.activitiesModel.activityAnswer!.testId,
@@ -166,7 +176,9 @@ class _ViewMyAnswersState extends State<ViewMyAnswers> {
         await _audioPlayer!.stop();
         widget.provider.setSelectedQuestionIndex(index, false);
       }
-      _startPlayAudio(question, index);
+      if (question.answers.isNotEmpty) {
+        _startPlayAudio(question, index);
+      }
     } else {
       if (isPlaying) {
         await _audioPlayer!.stop();
@@ -198,19 +210,26 @@ class _ViewMyAnswersState extends State<ViewMyAnswers> {
   }
 
   Future _reanswerCallBack(QuestionTopicModel question, int index) async {
+    int indexAnswer = question.answers.length - 1;
     showDialog(
         context: context,
         barrierDismissible: false,
         builder: (context) {
-          return ReAnswerDialog(context, question,
-              widget.activitiesModel.activityAnswer!.testId.toString(),
-              (question) {
+          return ReAnswerDialog(
+              context,
+              question,
+              widget.activitiesModel.activityAnswer!.testId.toString(), indexAnswer,
+              (question, indexAnswer) {
             int reanswerCount =
                 widget.provider.questionsList[index].reAnswerCount;
             widget.provider.questionsList[index].reAnswerCount =
                 reanswerCount + 1;
-            widget.provider.questionsList[index].answers.last.url =
-                question.answers.last.url;
+            if (question.answers.isNotEmpty) {
+              widget.provider.questionsList[index].answers.last.url =
+                  question.answers.last.url;
+            }  else {
+              widget.provider.questionsList[index].answers = question.answers;
+            }
             widget.provider
                 .addReanswerQuestion(widget.provider.questionsList[index]);
           });

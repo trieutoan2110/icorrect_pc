@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:icorrect_pc/src/data_source/constants.dart';
+import 'package:icorrect_pc/src/models/auth_models/class_merchant_model.dart';
+import 'package:icorrect_pc/src/models/auth_models/student_merchant_model.dart';
 import 'package:icorrect_pc/src/presenters/login_presenter.dart';
 import 'package:icorrect_pc/src/providers/auth_widget_provider.dart';
 import 'package:icorrect_pc/src/views/screens/auth/register_screen.dart';
@@ -17,6 +19,7 @@ import '../../dialogs/circle_loading.dart';
 import '../../dialogs/message_alert.dart';
 import '../../widgets/input_field_custom.dart';
 import '../home/home_screen.dart';
+import '../main_screen_manager.dart';
 import 'forgot_password_screen.dart';
 
 class LoginWidget extends StatefulWidget {
@@ -39,8 +42,27 @@ class _LoginState extends State<LoginWidget> implements LoginViewContract {
   void initState() {
     super.initState();
     _loading = CircleLoading();
+    _loading!.show(context);
     _loginPresenter = LoginPresenter(this);
     _provider = Provider.of<AuthWidgetProvider>(context, listen: false);
+    _autoLogin();
+  }
+
+  void _autoLogin() async {
+    String token = await Utils.instance().getAccessToken() ?? "";
+    Timer(const Duration(milliseconds: 2000), () async {
+      if (token.isNotEmpty) {
+        _loading!.hide();
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (_) => MainWidget(),
+          ),
+          ModalRoute.withName('/'),
+        );
+      } else {
+        _loading!.hide();
+      }
+    });
   }
 
   @override
@@ -56,7 +78,7 @@ class _LoginState extends State<LoginWidget> implements LoginViewContract {
 
   Widget _buildLoginForm() {
     double w = MediaQuery.of(context).size.width / 2;
-    double h = MediaQuery.of(context).size.height / 1.8;
+    double h = MediaQuery.of(context).size.height / 2;
     return Center(
       child: Container(
         width: w,
@@ -72,8 +94,8 @@ class _LoginState extends State<LoginWidget> implements LoginViewContract {
             _buildEmailField(),
             const SizedBox(height: 15),
             _buildPasswordField(),
-            const SizedBox(height: 15),
-            _buildLinkText(),
+            // const SizedBox(height: 15),
+            // _buildLinkText(),
             const SizedBox(height: 40),
             SizedBox(
               width: w / 3,
@@ -240,5 +262,55 @@ class _LoginState extends State<LoginWidget> implements LoginViewContract {
         builder: (context) {
           return MessageDialog(context: context, message: message);
         });
+  }
+
+  @override
+  void onChangeDeviceNameComplete(String msg) {
+    // TODO: implement onChangeDeviceNameComplete
+  }
+
+  @override
+  void onChangeDeviceNameError(String msg) {
+    // TODO: implement onChangeDeviceNameError
+  }
+
+  @override
+  void onGetListClassComplete(List<ClassModel> list) {
+    // TODO: implement onGetListClassComplete
+  }
+
+  @override
+  void onGetListClassError(String message) {
+    // TODO: implement onGetListClassError
+  }
+
+  @override
+  void onGetListStudentComplete(List<StudentModel> list) {
+    // TODO: implement onGetListStudentComplete
+  }
+
+  @override
+  void onGetListStudentError(String message) {
+    // TODO: implement onGetListStudentError
+  }
+
+  @override
+  void onVerifyComplete(String merchantID) {
+    // TODO: implement onVerifyComplete
+  }
+
+  @override
+  void onVerifyConfigComplete() {
+    // TODO: implement onVerifyConfigComplete
+  }
+
+  @override
+  void onVerifyConfigError(String message) {
+    // TODO: implement onVerifyConfigError
+  }
+
+  @override
+  void onVerifyError(String message) {
+    // TODO: implement onVerifyError
   }
 }

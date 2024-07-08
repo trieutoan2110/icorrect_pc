@@ -223,7 +223,14 @@ class MyTestPresenter {
   }
 
   MediaType _mediaType(String type) {
-    return (type == StringClass.audio) ? MediaType.audio : MediaType.video;
+    // return (type == StringClass.audio) ? MediaType.audio : MediaType.video;
+    if (type == StringClass.audio) {
+      return MediaType.audio;
+    } else if (type == StringClass.image) {
+      return MediaType.image;
+    } else {
+      return MediaType.video;
+    }
   }
 
   double _getPercent(int downloaded, int total) {
@@ -237,7 +244,7 @@ class MyTestPresenter {
 
     //Add question files
     for (QuestionTopicModel q in topic.questionList) {
-      allFiles.add(q.files.first);
+      allFiles.addAll(q.files);
       allFiles.addAll(q.answers);
     }
 
@@ -414,7 +421,7 @@ class MyTestPresenter {
           Utils.instance().prepareLogData(
             log: log,
             data: dataLog,
-            message: null,
+            message: json['message'],
             status: LogEvent.success,
           );
           _view!.updateAnswersSuccess(Utils.instance()
@@ -424,24 +431,25 @@ class MyTestPresenter {
           Utils.instance().prepareLogData(
             log: log,
             data: dataLog,
-            message: StringConstants.update_answer_error_message,
+            message: json['message'],
             status: LogEvent.failed,
           );
           _view!.updateAnswerFail(AlertClass.errorWhenUpdateAnswer);
         }
-      }).catchError((onError) {
-        //Add log
-        Utils.instance().prepareLogData(
-          log: log,
-          data: dataLog,
-          message: onError.toString(),
-          status: LogEvent.failed,
-        );
-        if (kDebugMode) {
-          print('catchError updateAnswerFail ${onError.toString()}');
-        }
-        _view!.updateAnswerFail(AlertClass.errorWhenUpdateAnswer);
       });
+      // .catchError((onError) {
+      //   //Add log
+      //   Utils.instance().prepareLogData(
+      //     log: log,
+      //     data: dataLog,
+      //     message: onError.toString(),
+      //     status: LogEvent.failed,
+      //   );
+      //   if (kDebugMode) {
+      //     print('catchError updateAnswerFail ${onError.toString()}');
+      //   }
+      //   _view!.updateAnswerFail(AlertClass.errorWhenUpdateAnswer);
+      // });
     } on TimeoutException {
       //Add log
       Utils.instance().prepareLogData(

@@ -6,9 +6,10 @@ import 'dart:math';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+
 // ignore: depend_on_referenced_packages
 import 'package:http/http.dart' as http;
-import 'package:path_provider/path_provider.dart';
+import 'package:icorrect_pc/src/models/simulator_test_models/file_path_model.dart';
 
 import '../data_source/api_urls.dart';
 import '../data_source/constants.dart';
@@ -28,17 +29,30 @@ import '../utils/utils.dart';
 
 abstract class SimulatorTestViewContract {
   void onGetTestDetailComplete(TestDetailModel testDetailModel, int total);
+
   void onGetTestDetailError(String message);
+
   void onDownloadSuccess(TestDetailModel testDetail, String nameFile,
-      double percent, int index, int total);
-  void onDownloadFailure(AlertInfo info);
+      double percent, int index, int total, FilePathModel filePathModel);
+
+  void onDownloadFailure(AlertInfo info, FilePathModel filePathModel);
+
+  void onDownloadFailureErrorTimeOut(FilePathModel filePathModel);
+
   void onSaveTopicListIntoProvider(List<TopicModel> list);
+
   void onGotoMyTestScreen(ActivityAnswer activityAnswer);
+
   void onSubmitTestSuccess(String msg, ActivityAnswer activityAnswer);
+
   void onSubmitTestFail(String msg);
+
   void onReDownload();
+
   void onTryAgainToDownload();
+
   void onHandleBackButtonSystemTapped();
+
   void onHandleEventBackButtonSystem({required bool isQuitTheTest});
 }
 
@@ -51,7 +65,9 @@ class SimulatorTestPresenter {
   }
 
   int _autoRequestDownloadTimes = 0;
+
   int get autoRequestDownloadTimes => _autoRequestDownloadTimes;
+
   void increaseAutoRequestDownloadTimes() {
     _autoRequestDownloadTimes += 1;
   }
@@ -134,7 +150,7 @@ class SimulatorTestPresenter {
         //Add log
         Utils.instance().prepareLogData(
           log: log,
-          data: null,
+          data: jsonDecode(value),
           message:
               "Loading homework detail error: ${map[StringConstants.k_error_code]} ${map[StringConstants.k_status]}",
           status: LogEvent.failed,
@@ -306,12 +322,19 @@ class SimulatorTestPresenter {
 
     //Add question files
     for (QuestionTopicModel q in topic.questionList) {
-      allFiles.addAll(q.files);
+      allFiles.add(q.files[0]);
+      if (q.files.length > 1) {
+        if (q.files[1].url.endsWith('png')) {
+          allFiles.add(q.files[1]);
+        }
+      }
+      // allFiles.addAll(q.files);
       allFiles.addAll(q.answers);
     }
 
     for (QuestionTopicModel q in topic.followUp) {
-      allFiles.addAll(q.files);
+      allFiles.add(q.files[0]);
+      // allFiles.addAll(q.files);
       allFiles.addAll(q.answers);
     }
 
@@ -326,9 +349,9 @@ class SimulatorTestPresenter {
     return allFiles;
   }
 
-  void downloadFailure(AlertInfo alertInfo) {
-    _view!.onDownloadFailure(alertInfo);
-  }
+  // void downloadFailure(AlertInfo alertInfo) {
+  //   _view!.onDownloadFailure(alertInfo);
+  // }
 
   Future downloadFiles(BuildContext context, TestDetailModel testDetail,
       List<FileTopicModel> filesTopic,
@@ -340,13 +363,16 @@ class SimulatorTestPresenter {
         String fileTopic = temp.url;
         String fileNameForDownload =
             Utils.instance().reConvertFileName(fileTopic);
+        String savePath = '';
 
         if (filesTopic.isNotEmpty) {
           String fileType = Utils.instance().fileType(fileTopic);
           MediaType mediaType = Utils.instance().mediaType(fileTopic);
-          bool isExist = await FileStorageHelper.checkExistFile(
-              fileTopic, mediaType, null);
+          bool isExist = await FileStorageHelper.newCheckExistFile(
+              fileTopic, mediaType);
           if (fileType.isNotEmpty && !isExist) {
+            savePath =
+            '${await FileStorageHelper.getFolderPath(mediaType, null)}\\$fileTopic';
             LogModel? log;
             if (context.mounted) {
               log = await Utils.instance().prepareToCreateLog(context,
@@ -370,18 +396,22 @@ class SimulatorTestPresenter {
                 print("DEBUG: Downloading file at index = $index");
               }
 
-              String url = downloadFileEP(fileNameForDownload);
+              FilePathModel filePathModel = FilePathModel(savePath: savePath, isSuccess: false);
 
               if (dio == null) {
-                _view!.onDownloadFailure(AlertClass.downloadVideoErrorAlert);
+                _view!.onDownloadFailure(AlertClass.downloadVideoErrorAlert, filePathModel);
                 return;
               }
+              String url = downloadFileEP(fileNameForDownload);
+              dio!.head(url).timeout(const Duration(seconds: 20));
+              if (kDebugMode) {
+                print('DEBUG DOWNLOAD FILE: START DOWNLOAD FILE $url');
+              }
+              //add savePath to list with status false
+              _view!.onDownloadFailure(AlertClass.downloadVideoErrorAlert, filePathModel);
 
-              dio!.head(url).timeout(const Duration(seconds: 10));
-              String savePath =
-                  '${await FileStorageHelper.getFolderPath(mediaType, null)}\\$fileTopic';
               Response response = await dio!.download(url, savePath);
-
+              print(savePath);
               if (response.statusCode == 200) {
                 //Add log
                 Utils.instance().prepareLogData(
@@ -390,9 +420,10 @@ class SimulatorTestPresenter {
                   message: response.statusMessage,
                   status: LogEvent.success,
                 );
+                filePathModel.isSuccess = true;
                 double percent = _getPercent(index + 1, filesTopic.length);
                 _view!.onDownloadSuccess(testDetail, fileTopic, percent,
-                    index + 1, filesTopic.length);
+                    index + 1, filesTopic.length, filePathModel);
               } else {
                 //Add log
                 Utils.instance().prepareLogData(
@@ -401,37 +432,24 @@ class SimulatorTestPresenter {
                   message: "Download failed!",
                   status: LogEvent.failed,
                 );
-                _view!.onDownloadFailure(AlertClass.downloadVideoErrorAlert);
-                // ignore: use_build_context_synchronously
+                _view!.onDownloadFailure(AlertClass.downloadVideoErrorAlert, filePathModel);
+                // _view!.onDownloadFailureErrorTimeOut(filePathModel);
                 reDownloadAutomatic(context, testDetail, filesTopic,
                     activityId: activityId);
                 break loop;
               }
-            } on TimeoutException {
-              _view!.onDownloadFailure(AlertClass.downloadVideoErrorAlert);
-              // ignore: use_build_context_synchronously
-              reDownloadAutomatic(context, testDetail, filesTopic,
-                  activityId: activityId);
-              break loop;
-            } on SocketException {
-              _view!.onDownloadFailure(AlertClass.downloadVideoErrorAlert);
-              //Download again
-              // ignore: use_build_context_synchronously
-              reDownloadAutomatic(context, testDetail, filesTopic,
-                  activityId: activityId);
-              break loop;
-            } on http.ClientException {
-              _view!.onDownloadFailure(AlertClass.downloadVideoErrorAlert);
-              //Download again
-              // ignore: use_build_context_synchronously
+            } on DioException {
+              _view!.onDownloadFailureErrorTimeOut(FilePathModel(savePath: savePath, isSuccess: false));
               reDownloadAutomatic(context, testDetail, filesTopic,
                   activityId: activityId);
               break loop;
             }
           } else {
+            savePath = await FileStorageHelper.newGetFilePath(fileTopic, mediaType);
+            print(savePath);
             double percent = _getPercent(index + 1, filesTopic.length);
             _view!.onDownloadSuccess(
-                testDetail, fileTopic, percent, index + 1, filesTopic.length);
+                testDetail, fileTopic, percent, index + 1, filesTopic.length, FilePathModel(savePath: savePath, isSuccess: true));
           }
         }
       }

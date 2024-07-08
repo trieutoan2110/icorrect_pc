@@ -45,6 +45,15 @@ class _ViewOtherStudentAnswersState extends State<ViewOtherStudentAnswers> {
   }
 
   @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
+    if (_audioPlayer != null) {
+      _audioPlayer!.dispose();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     w = MediaQuery.of(context).size.width;
     h = MediaQuery.of(context).size.height;

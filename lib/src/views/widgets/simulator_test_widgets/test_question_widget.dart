@@ -68,7 +68,7 @@ class TestQuestionWidget extends StatelessWidget {
       double w = MediaQuery.of(context).size.width;
       return Container(
         height: h,
-        padding: const EdgeInsets.symmetric(vertical: 30),
+        padding: const EdgeInsets.symmetric(vertical: 10),
         // child: isExam
         //     ? ListView.builder(
         //         itemCount: questions.length,

@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:icorrect_pc/core/app_assets.dart';
 import 'package:icorrect_pc/src/data_source/constants.dart';
@@ -7,7 +6,6 @@ import 'package:provider/provider.dart';
 
 import '../../../../core/app_colors.dart';
 import '../../../providers/simulator_test_provider.dart';
-import '../../../providers/test_room_provider.dart';
 
 class StartTestWidget extends StatelessWidget {
   Function onClickStartTest;
@@ -34,9 +32,9 @@ class StartTestWidget extends StatelessWidget {
                       onClickStartTest();
                     },
                     style: ButtonStyle(
-                        backgroundColor: MaterialStateProperty.all<Color>(
+                        backgroundColor: WidgetStateProperty.all<Color>(
                             AppColors.purpleBlue),
-                        shape: MaterialStateProperty.all(RoundedRectangleBorder(
+                        shape: WidgetStateProperty.all(RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(13)))),
                     child: Padding(
                         padding: const EdgeInsets.symmetric(vertical: 10),

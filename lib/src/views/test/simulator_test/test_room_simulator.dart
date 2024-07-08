@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 
@@ -8,31 +7,24 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:icorrect_pc/core/app_colors.dart';
-import 'package:icorrect_pc/core/camera_service.dart';
 import 'package:icorrect_pc/core/compress_video.dart';
 import 'package:icorrect_pc/src/data_source/constants.dart';
-import 'package:icorrect_pc/src/models/auth_models/video_record_exam_info.dart';
+import 'package:icorrect_pc/src/models/simulator_test_models/file_path_model.dart';
 import 'package:icorrect_pc/src/models/simulator_test_models/playlist_model.dart';
 import 'package:icorrect_pc/src/models/simulator_test_models/question_topic_model.dart';
-import 'package:icorrect_pc/src/models/simulator_test_models/topic_model.dart';
 import 'package:icorrect_pc/src/models/ui_models/alert_info.dart';
-import 'package:icorrect_pc/src/providers/auth_widget_provider.dart';
 import 'package:icorrect_pc/src/providers/camera_preview_provider.dart';
-import 'package:icorrect_pc/src/providers/main_widget_provider.dart';
 import 'package:icorrect_pc/src/providers/simulator_test_provider.dart';
-import 'package:icorrect_pc/src/providers/test_room_provider.dart';
+import 'package:icorrect_pc/src/providers/window_manager_provider.dart';
 import 'package:icorrect_pc/src/utils/utils.dart';
 import 'package:icorrect_pc/src/views/dialogs/circle_loading.dart';
 import 'package:icorrect_pc/src/views/dialogs/re_answer_dialog.dart';
 import 'package:icorrect_pc/src/views/dialogs/tip_question_dialog.dart';
-import 'package:icorrect_pc/src/views/screens/home/home_screen.dart';
 import 'package:icorrect_pc/src/views/widgets/camera_preview.dart';
-import 'package:icorrect_pc/src/views/widgets/empty_widget.dart';
 import 'package:icorrect_pc/src/views/widgets/simulator_test_widgets/video_simulator_widget.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:video_player/video_player.dart';
-import 'package:video_player_win/video_player_win_plugin.dart';
 import 'package:record/record.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -52,17 +44,19 @@ import '../../widgets/simulator_test_widgets/start_test_widget.dart';
 import '../../widgets/simulator_test_widgets/test_question_widget.dart';
 import '../../widgets/simulator_test_widgets/test_record_widget.dart';
 
+
 class TestRoomSimulator extends StatefulWidget {
   final ActivitiesModel? activitiesModel;
   final TestDetailModel testDetailModel;
   final SimulatorTestPresenter simulatorTestPresenter;
   final SimulatorTestProvider simulatorTestProvider;
+  final WindowManagerProvider windowManagerProvider;
   const TestRoomSimulator(
       {super.key,
-      required this.testDetailModel,
-      this.activitiesModel,
-      required this.simulatorTestPresenter,
-      required this.simulatorTestProvider});
+        required this.testDetailModel,
+        this.activitiesModel,
+        required this.simulatorTestPresenter,
+        required this.simulatorTestProvider, required this.windowManagerProvider});
 
   @override
   State<TestRoomSimulator> createState() => _TestRoomSimulatorState();
@@ -71,11 +65,14 @@ class TestRoomSimulator extends StatefulWidget {
 class _TestRoomSimulatorState extends State<TestRoomSimulator>
     with WindowListener, AutomaticKeepAliveClientMixin<TestRoomSimulator>
     implements TestRoomSimulatorContract {
+
   CameraPreviewProvider? _cameraPreviewProvider;
 
   TestRoomSimulatorPresenter? _presenter;
 
   VideoPlayerController? _videoPlayerController;
+
+
   Timer? _countDown;
   AudioPlayers.AudioPlayer? _audioPlayer;
   Record? _recordController;
@@ -99,7 +96,6 @@ class _TestRoomSimulatorState extends State<TestRoomSimulator>
     _audioPlayer = AudioPlayers.AudioPlayer();
     _recordController = Record();
     _loading = CircleLoading();
-
     _cameraPreviewProvider =
         Provider.of<CameraPreviewProvider>(context, listen: false);
     _presenter = TestRoomSimulatorPresenter(this);
@@ -117,15 +113,15 @@ class _TestRoomSimulatorState extends State<TestRoomSimulator>
 
   void _prepareForTestRoom() {
     Future.delayed(Duration.zero, () {
+      widget.simulatorTestProvider.setIsTestRoom(true);
       List<PlayListModel> playLists =
-          _presenter!.getPlayList(widget.testDetailModel);
+      _presenter!.getPlayList(widget.testDetailModel);
       if (kDebugMode) {
         for (PlayListModel play in playLists) {
           print(
               "DEBUG : play list ${play.questionContent} ,cue card: ${play.cueCard}");
         }
       }
-
       if (widget.simulatorTestProvider.submitStatus != SubmitStatus.success) {
         if (!widget.simulatorTestProvider.isDownloadAgain &&
             widget.simulatorTestProvider.doingStatus != DoingStatus.doing) {
@@ -262,7 +258,8 @@ class _TestRoomSimulatorState extends State<TestRoomSimulator>
   }
 
   Widget _buildTestRoomDesktopLayout() {
-    return SizedBox(
+    return Container(
+      margin: const EdgeInsets.only(top: 10),
       width: w,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.end,
@@ -276,7 +273,7 @@ class _TestRoomSimulatorState extends State<TestRoomSimulator>
             alignment: Alignment.bottomCenter,
             child: SizedBox(
               width: w,
-              height: h / 2.5,
+              height: h / 2,
               child: Stack(
                 children: [
                   // widget.activitiesModel.isExam()
@@ -308,20 +305,21 @@ class _TestRoomSimulatorState extends State<TestRoomSimulator>
                   child: Container(
                     width: w,
                     padding:
-                        const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+                    const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
                     margin: const EdgeInsets.symmetric(horizontal: 10),
                     decoration: BoxDecoration(
                         borderRadius:
-                            const BorderRadius.all(Radius.circular(5)),
+                        const BorderRadius.all(Radius.circular(5)),
                         border: Border.all(color: Colors.black, width: 2),
                         image: const DecorationImage(
                             image: AssetImage(AppAssets.bg_test_room),
                             fit: BoxFit.cover)),
                     child: SizedBox(
                       width: w / 3,
-                      child: VideoSimulatorWidget(onVideoEnd: () {
-                        _onVideoEnd();
-                      }),
+                      // child: VideoSimulatorWidget(onVideoEnd: () {
+                      //   _onVideoEnd();
+                      // }),
+                      child: VideoSimulatorWidget(),
                     ),
                   ),
                 ),
@@ -350,7 +348,7 @@ class _TestRoomSimulatorState extends State<TestRoomSimulator>
                 child: Container(
                   width: w,
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                   decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(10)),
@@ -364,7 +362,8 @@ class _TestRoomSimulatorState extends State<TestRoomSimulator>
                         _startSubmitAction();
                       }),
                       TestRecordWidget(
-                        finishAnswer: (questionTopicModel) {
+                        onFinishAnswer: (questionTopicModel) {
+                          _countDown!.cancel();
                           _onFinishAnswer();
                         },
                         repeatQuestion: (questionTopicModel) {
@@ -396,9 +395,10 @@ class _TestRoomSimulatorState extends State<TestRoomSimulator>
         children: [
           SizedBox(
             width: w / 3,
-            child: VideoSimulatorWidget(onVideoEnd: () {
-              _onVideoEnd();
-            }),
+            // child: VideoSimulatorWidget(onVideoEnd: () {
+            //   _onVideoEnd();
+            // }),
+            child: VideoSimulatorWidget(),
           ),
           Container(
             width: w / 2,
@@ -412,7 +412,8 @@ class _TestRoomSimulatorState extends State<TestRoomSimulator>
                   _startSubmitAction();
                 }),
                 TestRecordWidget(
-                  finishAnswer: (questionTopicModel) {
+                  onFinishAnswer: (questionTopicModel) {
+                    _countDown!.cancel();
                     _onFinishAnswer();
                   },
                   repeatQuestion: (questionTopicModel) {
@@ -448,7 +449,7 @@ class _TestRoomSimulatorState extends State<TestRoomSimulator>
   void _onClickStartTest() {
     Map<String, dynamic> info = {
       StringConstants.k_test_id:
-          widget.simulatorTestProvider.currentTestDetail.testId.toString(),
+      widget.simulatorTestProvider.currentTestDetail.testId.toString(),
     };
     if (widget.activitiesModel != null) {
       info.addEntries([
@@ -461,20 +462,48 @@ class _TestRoomSimulatorState extends State<TestRoomSimulator>
   }
 
   @override
-  Future<void> playFileVideo(File normalFile, File slowFile) async {
+  Future<void> playFileVideo(File normalFile) async {
     PlayListModel playListModel = widget.simulatorTestProvider.currentPlay;
     String path = await FileStorageHelper.getFilePath(
         playListModel.fileImage, MediaType.image, null);
     widget.simulatorTestProvider.setFileImage(File(path));
-    _initVideoController(normalFile);
+    loop:
+    for (FilePathModel filePathModel in widget.simulatorTestProvider.listSavePath) {
+      if (filePathModel.savePath == normalFile.path) {
+        if (filePathModel.isSuccess) {
+          await _initVideoController(normalFile);
+          break loop;
+        } else {
+          widget.simulatorTestPresenter.dio!.close(force: true);
+          await FileStorageHelper.newDeleteFile(filePathModel.savePath);
+          onFileNotFound();
+          break loop;
+        }
+      }
+    }
+    // _initVideoController(normalFile);
   }
+
 
   Future _initVideoController(File file) async {
     if (kDebugMode) {
       print("DEBUG: File video : ${file.path}");
     }
-    _videoPlayerController = VideoPlayerController.file(file);
 
+    PlayListModel playListModel = widget.simulatorTestProvider.currentPlay;
+
+    if (_videoPlayerController != null) {
+      _videoPlayerController!.dispose();
+    }
+
+    _videoPlayerController = VideoPlayerController.file(file);
+    if (kDebugMode) {
+      print('DEBUG RECORD: - start video: ${playListModel.questionContent}');
+    }
+    Map<String, dynamic> data = {
+      StringConstants.k_question_content: 'question: ${playListModel.questionTopicModel.content}'
+    };
+    _createLog(action: LogEvent.debugRecordStartVideo, data: data);
     _videoPlayerController!.setPlaybackSpeed(_getSpeedVideo());
     _videoPlayerController!.initialize().then((value) {
       _videoPlayerController!.value.isPlaying
@@ -483,16 +512,28 @@ class _TestRoomSimulatorState extends State<TestRoomSimulator>
       setState(() {});
     });
 
-    //   Map<String, dynamic> info = {
-    //   StringConstants.k_file_id: file.id.toString(),
-    //   StringConstants.k_file_url: file.path,
-    // };
-    // _createLog(action: LogEvent.actionPlayVideoQuestion, data: info)
-
     widget.simulatorTestProvider.setPlayController(_videoPlayerController!);
+
+
+    Map<String, dynamic> info = {
+      StringConstants.k_file_path: file.path,
+      StringConstants.k_question_content: playListModel.questionContent
+    };
+    _createLog(action: LogEvent.actionPlayVideoQuestion, data: info);
+    widget.simulatorTestProvider.setCurrentFileVideo(file.path);
+
     widget.simulatorTestProvider.videoPlayController.addListener(() {
+      if (kDebugMode) {
+        print(playListModel.questionContent);
+        print(widget.simulatorTestProvider.videoPlayController.value.position);
+      }
       if (widget.simulatorTestProvider.videoPlayController.value.position ==
           widget.simulatorTestProvider.videoPlayController.value.duration) {
+        print('DEBUG RECORD: - end video: ${file.path} , question: ${playListModel.questionContent}');
+        Map<String, dynamic> data = {
+          StringConstants.k_question_content: 'question: ${playListModel.questionTopicModel.content}'
+        };
+        _createLog(action: LogEvent.debugRecordEndVideo, data: data);
         _onVideoEnd();
       }
     });
@@ -502,7 +543,18 @@ class _TestRoomSimulatorState extends State<TestRoomSimulator>
     if (!mounted) {
       return;
     }
-    PlayListModel playListModel = widget.simulatorTestProvider.currentPlay;
+    // PlayListModel playListModel = widget.simulatorTestProvider.currentPlay;
+    int indexPlay = widget.simulatorTestProvider.indexCurrentPlay;
+    PlayListModel playListModel =
+    widget.simulatorTestProvider.playList[indexPlay];
+    widget.simulatorTestProvider.setCurrentPlay(playListModel);
+
+    // Map<String, dynamic> info = {
+    //   StringConstants.k_file_path: widget.simulatorTestProvider.currentFileVideo,
+    //   StringConstants.k_question_content: playListModel.questionContent
+    // };
+    //
+    // _createLog(action: LogEvent.endVideo, data: info);
 
     if (playListModel.questionContent == PlayListType.introduce.name) {
       _doingTest();
@@ -510,7 +562,7 @@ class _TestRoomSimulatorState extends State<TestRoomSimulator>
       _startCountDownCueCard();
     } else if (playListModel.questionContent == PlayListType.endOfTest.name ||
         widget.simulatorTestProvider.indexQuestion ==
-                widget.simulatorTestProvider.questionLength &&
+            widget.simulatorTestProvider.questionLength &&
             playListModel.numPart != PartOfTest.part2.get) {
       _onEndTheTest();
     } else {
@@ -532,7 +584,11 @@ class _TestRoomSimulatorState extends State<TestRoomSimulator>
 
   @override
   void onFileNotFound() {
-    _showCheckNetworkDialog();
+    if (_countDown != null) {
+      _countDown!.cancel();
+    }
+    widget.simulatorTestPresenter.tryAgainToDownload();
+    // _showCheckNetworkDialog();
   }
 
   void _showCheckNetworkDialog() async {
@@ -543,7 +599,7 @@ class _TestRoomSimulatorState extends State<TestRoomSimulator>
         builder: (BuildContext context) {
           return CustomAlertDialog(
             title:
-                Utils.instance().multiLanguage(StringConstants.warning_title),
+            Utils.instance().multiLanguage(StringConstants.warning_title),
             description: Utils.instance()
                 .multiLanguage(StringConstants.video_not_found_message),
             okButtonTitle: StringConstants.ok_button_title,
@@ -553,11 +609,13 @@ class _TestRoomSimulatorState extends State<TestRoomSimulator>
             hasCloseButton: false,
             okButtonTapped: () {
               _dialogNotShowing = true;
+              // _videoPlayerController!.pause();
               Utils.instance().checkInternetConnection().then((isConnected) {
                 if (isConnected) {
                   widget.simulatorTestPresenter.tryAgainToDownload();
                 } else {
                   _showCheckNetworkDialog();
+                  // widget.simulatorTestPresenter.tryAgainToDownload();
                 }
               });
             },
@@ -579,16 +637,12 @@ class _TestRoomSimulatorState extends State<TestRoomSimulator>
     if (null != _countDown) {
       _countDown!.cancel();
     }
-    // PlayListModel playListModel = widget.simulatorTestProvider.currentPlay;
-
-    // _presenter!.playingQuestion(
-    //     playListModel.fileQuestionNormal, playListModel.fileQuestionSlow);
 
     int indexPlay = widget.simulatorTestProvider.indexCurrentPlay;
     widget.simulatorTestProvider.setIndexCurrentPlay(indexPlay);
 
     PlayListModel playListModel =
-        widget.simulatorTestProvider.playList[indexPlay];
+    widget.simulatorTestProvider.playList[indexPlay];
 
     widget.simulatorTestProvider.setRepeatTimes(0);
     if (playListModel.questionContent == PlayListType.introduce.name) {
@@ -600,7 +654,7 @@ class _TestRoomSimulatorState extends State<TestRoomSimulator>
       _presenter!.playingEndOfTest(playListModel.endOfTest);
     } else {
       _presenter!.playingQuestion(
-          playListModel.fileQuestionNormal, playListModel.fileQuestionSlow);
+          playListModel.fileQuestionNormal);
     }
     widget.simulatorTestProvider.setCurrentPlay(playListModel);
 
@@ -617,35 +671,37 @@ class _TestRoomSimulatorState extends State<TestRoomSimulator>
     if (_isExam) {
       _callTestPositionApi();
     }
+    PlayListModel playListModel = widget.simulatorTestProvider.currentPlay;
     widget.simulatorTestProvider.clearImageFile();
+    print('DEBUG RECORD: - click finish stop recording question: ${playListModel.questionTopicModel.content}');
+
+    Map<String, dynamic> data = {
+      StringConstants.k_question_content: 'question: ${playListModel.questionTopicModel.content}'
+    };
+
+    _createLog(action: LogEvent.debugClickFinishStopRecord, data: data);
+
     _recordController!.stop();
     widget.simulatorTestProvider.setVisibleRecord(false);
-    // CameraService.instance().stopRecording(
-    //     cameraPreviewProvider: _cameraPreviewProvider!,
-    //     savedVideoRecord: (savedFile) {
-    //       int totalCount = Utils.instance().getRecordTime(_currentNumPart());
-    //       int countTime = widget.simulatorTestProvider.currentCount;
 
-    //       widget.simulatorTestProvider.addVideoRecorded(VideoExamRecordInfo(
-    //           questionId: widget.simulatorTestProvider.currentQuestion.id,
-    //           filePath: savedFile.path,
-    //           duration: totalCount - countTime));
-    //     });
-
-    PlayListModel playListModel = widget.simulatorTestProvider.currentPlay;
+    String currentFilePath = widget.simulatorTestProvider.currentFileVideo!;
+    String currentFileRecordPath = widget.simulatorTestProvider.currentFileRecord!;
     if (playListModel.questionTopicModel.id != 0) {
       Map<String, dynamic> info = {
         StringConstants.k_question_id:
-            playListModel.questionTopicModel.id.toString(),
+        playListModel.questionTopicModel.id.toString(),
         StringConstants.k_question_content:
-            playListModel.questionTopicModel.content,
+        playListModel.questionTopicModel.content,
+        StringConstants.k_file_path: currentFilePath,
+        StringConstants.k_file_audio_path: currentFileRecordPath,
+        StringConstants.k_size_file_audio: await File(currentFilePath).length()
       };
       _createLog(action: LogEvent.actionFinishAnswer, data: info);
 
       playListModel.questionTopicModel.repeatIndex =
-          playListModel.questionTopicModel.answers.isNotEmpty
-              ? playListModel.questionTopicModel.answers.length - 1
-              : 0;
+      playListModel.questionTopicModel.answers.isNotEmpty
+          ? playListModel.questionTopicModel.answers.length - 1
+          : 0;
       // widget.simulatorTestProvider.addQuestionToList(playListModel.questionTopicModel);
       widget.simulatorTestProvider
           .addQuestionToList(playListModel.questionTopicModel);
@@ -667,13 +723,20 @@ class _TestRoomSimulatorState extends State<TestRoomSimulator>
   }
 
   void _onClickRepeatAnswer() {
+    PlayListModel playListModel = widget.simulatorTestProvider.currentPlay;
+    Map<String, dynamic> data = {
+      StringConstants.k_question_content: 'question: ${playListModel.questionTopicModel.content}'
+    };
+    _createLog(action: LogEvent.debugStopRecordClickRepeat, data: data);
+
     widget.simulatorTestProvider.setVisibleRecord(false);
     widget.simulatorTestProvider
         .setRepeatTimes(widget.simulatorTestProvider.repeatTimes + 1);
-    PlayListModel playListModel = widget.simulatorTestProvider.currentPlay;
+    // PlayListModel playListModel = widget.simulatorTestProvider.currentPlay;
 
     if (null != _countDown) {
       _countDown!.cancel();
+      _recordController!.stop();
     }
 
     QuestionTopicModel question = playListModel.questionTopicModel;
@@ -704,7 +767,7 @@ class _TestRoomSimulatorState extends State<TestRoomSimulator>
 
     Future.delayed(const Duration(milliseconds: 500), () {
       _presenter!.playingQuestion(
-          playListModel.fileQuestionNormal, playListModel.fileQuestionSlow);
+          playListModel.fileQuestionNormal);
     });
   }
 
@@ -713,13 +776,22 @@ class _TestRoomSimulatorState extends State<TestRoomSimulator>
       _countDown!.cancel();
     }
     _recordAnswer();
-
+    if (widget.simulatorTestProvider.currentPlay.questionContent == PlayListType.endOfTest.name) {
+      widget.simulatorTestProvider.setVisibleRecord(false);
+    }
     widget.simulatorTestProvider.setVisibleRecord(true);
     int countTime = _getCountTimeRecord();
 
-    _countDown = _presenter!.startCountDown(
-        context: context, count: countTime, isPart2: _isPart2());
+    if (kDebugMode) {
+      print('DEBUG RECORD: - call start count down + question: ${widget.simulatorTestProvider.currentPlay.questionContent}');
+    }
+    Map<String, dynamic> data = {
+      StringConstants.k_question_content: 'question: ${widget.simulatorTestProvider.currentPlay.questionContent}'
+    };
+    _createLog(action: LogEvent.debugCallStartCountdown, data: data);
 
+    _countDown = _presenter!.startCountDown(
+        context: context, count: countTime, isPart2: _isPart2(), question: widget.simulatorTestProvider.currentPlay.questionContent);
     widget.simulatorTestProvider.setCurrentCount(countTime);
 
     String timeFormat = Utils.instance().formattedTime(timeInSecond: countTime);
@@ -752,26 +824,28 @@ class _TestRoomSimulatorState extends State<TestRoomSimulator>
   void _startDoingTest() {
     PlayListModel playModel = widget.simulatorTestProvider.playList.first;
     _presenter!.playingIntroduce(playModel.fileIntro);
-
+    widget.windowManagerProvider.setShowExitAppDoingTest(true);
     widget.simulatorTestProvider.updateDoingStatus(DoingStatus.doing);
   }
 
   void _doingTest() {
     int indexPlay = widget.simulatorTestProvider.indexCurrentPlay + 1;
+    if (kDebugMode) {
+      print('DEBUG RECORD: - index next question ${indexPlay}');
+    }
     if (indexPlay <= widget.simulatorTestProvider.playList.length - 1) {
       widget.simulatorTestProvider.setIndexCurrentPlay(indexPlay);
-
       if (kDebugMode) {
         PlayListModel playListModel1 = widget.simulatorTestProvider.currentPlay;
         for (int i = 0;
-            i < playListModel1.questionTopicModel.answers.length;
-            i++) {
+        i < playListModel1.questionTopicModel.answers.length;
+        i++) {
           print(
               "DEBUG : ${playListModel1.questionTopicModel.answers[i].url},index :${i.toString()}");
         }
       }
       PlayListModel playListModel =
-          widget.simulatorTestProvider.playList[indexPlay];
+      widget.simulatorTestProvider.playList[indexPlay];
 
       widget.simulatorTestProvider.setRepeatTimes(0);
       if (playListModel.questionContent == PlayListType.introduce.name) {
@@ -783,7 +857,7 @@ class _TestRoomSimulatorState extends State<TestRoomSimulator>
         _presenter!.playingEndOfTest(playListModel.endOfTest);
       } else {
         _presenter!.playingQuestion(
-            playListModel.fileQuestionNormal, playListModel.fileQuestionSlow);
+            playListModel.fileQuestionNormal);
       }
       widget.simulatorTestProvider.setCurrentPlay(playListModel);
     } else {
@@ -797,6 +871,11 @@ class _TestRoomSimulatorState extends State<TestRoomSimulator>
     widget.simulatorTestProvider.setCanPlayAnswer(true);
     widget.simulatorTestProvider.setVisibleRecord(false);
     widget.simulatorTestProvider.updateDoingStatus(DoingStatus.finish);
+
+    Map<String, dynamic> info = {
+      StringConstants.k_duration_file_audio: 'Finish'
+    };
+    _createLog(action: LogEvent.finistTest, data: info);
 
     if (null != _countDown) {
       _countDown!.cancel();
@@ -853,17 +932,17 @@ class _TestRoomSimulatorState extends State<TestRoomSimulator>
             context: context,
             testId: widget.testDetailModel.testId.toString(),
             activityId: activityId,
-            // questionsList: widget.simulatorTestProvider.questionList,
             questionsList: widget.simulatorTestProvider.questionList,
             isExam: _isExam,
             isUpdate: false,
             videoConfirmFile:
-                File(pathVideo).existsSync() ? File(pathVideo) : null,
+            File(pathVideo).existsSync() ? File(pathVideo) : null,
             logAction: widget.simulatorTestProvider.logActions);
       } else {
         if (kDebugMode) {
           print("DEBUG: Connect error here!");
         }
+        widget.simulatorTestProvider.setVisibleSaveTheTest(true);
         Utils.instance().showConnectionErrorDialog(context);
 
         Utils.instance().addConnectionErrorLog(context);
@@ -876,9 +955,16 @@ class _TestRoomSimulatorState extends State<TestRoomSimulator>
       if (isConnected) {
         _loading!.show(context);
         String activityId = "";
+
         if (widget.activitiesModel != null) {
           activityId = widget.activitiesModel!.activityId.toString();
         }
+        Map<String, dynamic> info = {
+          StringConstants.k_activity_id: activityId
+        };
+
+        _createLog(action: LogEvent.actionSubmitTest, data: info);
+
         if (widget.simulatorTestProvider.reanswersList.isNotEmpty) {
           _presenter!.submitMyTest(
               context: context,
@@ -913,19 +999,37 @@ class _TestRoomSimulatorState extends State<TestRoomSimulator>
     try {
       String newFileName =
           '${await Utils.instance().generateAudioFileName()}.wav';
-
       _fileNameRecord = await FileStorageHelper.getFilePath(
           newFileName, MediaType.audio, null);
+      widget.simulatorTestProvider.setCurrentFileRecord(_fileNameRecord);
+
+      Map<String, dynamic> info = {
+        StringConstants.k_file_path: widget.simulatorTestProvider.currentFileVideo,
+        StringConstants.k_file_audio_path: _fileNameRecord,
+        StringConstants.k_question_content: widget.simulatorTestProvider.currentPlay.questionContent
+      };
+
+      _createLog(action: LogEvent.actionStartRecordAnswer, data: info);
 
       if (await _recordController!.hasPermission()) {
+        print('DEBUG RECORD: - start record question ${widget.simulatorTestProvider.currentPlay.questionContent}');
+
+        Map<String, dynamic> data = {
+          StringConstants.k_question_content: 'question: ${widget.simulatorTestProvider.currentPlay.questionContent}'
+        };
+
+        _createLog(action: LogEvent.debugStartRecordQuestion, data: data);
+
         await _recordController!.start(
           path: _fileNameRecord,
           encoder:
-              Platform.isWindows ? AudioEncoder.wav : AudioEncoder.pcm16bit,
+          Platform.isWindows ? AudioEncoder.wav : AudioEncoder.pcm16bit,
           bitRate: 128000,
           numChannels: 1,
           samplingRate: 44100,
         );
+      } else {
+        openAppSettings();
       }
 
       List<FileTopicModel> answers =
@@ -936,6 +1040,15 @@ class _TestRoomSimulatorState extends State<TestRoomSimulator>
           answers;
     } catch (e) {
       //Add log
+      print('DEBUG RECORD: - record exception: ${e.toString()}');
+
+      Map<String, dynamic> data = {
+        StringConstants.k_exception: 'record exception: ${e.toString()}'
+      };
+
+      _createLog(action: LogEvent.debugRecordException, data: data);
+
+
       LogModel? log;
       Map<String, dynamic>? dataLog = {};
 
@@ -996,11 +1109,11 @@ class _TestRoomSimulatorState extends State<TestRoomSimulator>
     return Consumer<SimulatorTestProvider>(builder: (context, provider, child) {
       return (provider.fileImage.existsSync())
           ? Container(
-              width: w,
-              padding: const EdgeInsets.all(40),
-              color: Colors.white,
-              child: Image.file(provider.fileImage),
-            )
+        width: w,
+        padding: const EdgeInsets.all(40),
+        color: Colors.white,
+        child: Image.file(provider.fileImage),
+      )
           : Container();
     });
   }
@@ -1027,6 +1140,14 @@ class _TestRoomSimulatorState extends State<TestRoomSimulator>
     String path = await FileStorageHelper.getFilePath(
         question.answers[question.repeatIndex].url, MediaType.audio, null);
     try {
+
+      Map<String, dynamic> info = {
+        StringConstants.k_question_content: question.content,
+        StringConstants.k_file_audio_path: path
+      };
+
+      _createLog(action: LogEvent.actionPlayAudio, data: info);
+
       await _audioPlayer!.play(AudioPlayers.DeviceFileSource(path),
           mode: PlayerMode.mediaPlayer);
       await _audioPlayer!.setVolume(2.5);
@@ -1050,19 +1171,22 @@ class _TestRoomSimulatorState extends State<TestRoomSimulator>
       widget.simulatorTestProvider
           .setSelectedQuestionIndex(indexQuestionPlaying, false);
     }
+
+    int indexReanswer = question.repeatIndex;
+
     showDialog(
         context: context,
         barrierDismissible: false,
         builder: (context) {
           return ReAnswerDialog(
-              context, question, widget.testDetailModel.testId.toString(),
-              (question) {
-            if (widget.simulatorTestProvider.submitStatus ==
-                SubmitStatus.success) {
-              widget.simulatorTestProvider.addReanswerQuestion(question);
-            }
-            widget.simulatorTestProvider.questionList[index] = question;
-          });
+              context, question, widget.testDetailModel.testId.toString(), indexReanswer,
+                  (question, indexReanswer) {
+                if (widget.simulatorTestProvider.submitStatus ==
+                    SubmitStatus.success) {
+                  widget.simulatorTestProvider.addReanswerQuestion(question);
+                }
+                widget.simulatorTestProvider.questionList[index] = question;
+              });
         });
   }
 
@@ -1094,6 +1218,9 @@ class _TestRoomSimulatorState extends State<TestRoomSimulator>
       widget.simulatorTestProvider.clearReasnwersList();
       widget.simulatorTestProvider.setVisibleSaveTheTest(false);
       widget.simulatorTestProvider.updateSubmitStatus(SubmitStatus.success);
+      if (widget.simulatorTestProvider.packageID != 0) {
+        widget.simulatorTestProvider.setCanReanswer(false);
+      }
     }
   }
   ////////////////////////////CHECK VALUE FUNCTION//////////////////////////////
@@ -1112,7 +1239,7 @@ class _TestRoomSimulatorState extends State<TestRoomSimulator>
 
   bool _isPart2() {
     return widget.simulatorTestProvider.currentPlay != PlayListModel() &&
-            widget.simulatorTestProvider.currentPlay.cueCard.isNotEmpty ||
+        widget.simulatorTestProvider.currentPlay.cueCard.isNotEmpty ||
         widget.simulatorTestProvider.currentPlay.numPart ==
             PartOfTest.part2.get;
   }

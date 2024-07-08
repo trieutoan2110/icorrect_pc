@@ -483,11 +483,19 @@ class LogEvent {
   static const String none = "none"; //For action log
 
   //Api log event
+  static const String callApiVerify = 'call_api_verify';
+  static const String callApiLoginClassID = 'call_api_login_classID';
   static const String callApiLogin = 'call_api_login';
   static const String callApiAppConfig = 'call_api_app_config';
   static const String callApiGetUserInfo = 'call_api_get_user_info';
   static const String callApiLogout = 'call_api_logout';
   static const String callApiGetListHomework = 'call_api_get_list_homework';
+  static const String callApiGetListSyllabus = 'call_api_get_list_syllabus';
+  static const String callApiGetListFileSyllabus = 'call_api_get_list_file_syllabus';
+  static const String callApiGetListClass = 'call_api_get_list_class';
+  static const String callApiGetListStudent = 'call_api_get_list_student';
+  static const String callApiVerifyConfig = 'call_api_verify_config';
+  static const String callApiChangeDeviceName = 'call_api_change_device_name';
   static const String callApiChangePassword = 'call_api_change_password';
   static const String callApiGetTestDetail =
       'call_api_get_test_detail'; //api/v1/ielts-test/syllabus/create
@@ -521,8 +529,9 @@ class LogEvent {
       'action_click_on_homework_item';
   static const String actionStartToDoTest = 'action_start_to_do_test';
   static const String actionPlayVideoQuestion = 'action_play_video_question';
-  static const String actionRecordAnswer = 'action_record_answer';
+  static const String actionStartRecordAnswer = 'action_start_record_answer';
   static const String actionFinishAnswer = 'action_finish_answer';
+  static const String startRecordReanswer = 'action_start_re_answer';
   static const String actionFinishReAnswer = 'action_finish_re_answer';
   static const String actionRepeatQuestion = 'action_repeat_question';
   static const String actionSubmitTest = 'action_submit_test';
@@ -531,6 +540,22 @@ class LogEvent {
   static const String checkConnection = 'check_connection';
   static const String imageDownload = 'image_download';
   static const String createVideoSource = 'create_video_source';
+  static const String endVideo = 'end_video';
+  static const String finistTest = 'finish_test';
+  static const String actionPlayAudio = 'action_play_audio';
+  static const String showRecord = 'show_record';
+  static const String actionCancelReanswer = 'action_cancel_reanswer';
+  static const String actionCloseApp = 'action_close_app';
+  // static const String action
+  static const String debugCallStartCountdown = 'DEBUG_RECORD_call_start_count_down';
+  static const String debugStartRecordQuestion = 'DEBUG_RECORD_start_record_question';
+  static const String debugClickFinishStopRecord = 'DEBUG_RECORD_click_finish_stop_recording';
+  static const String debugStopRecordClickRepeat = 'DEBUG_RECORD_stop_record_when_click_repeat';
+  static const String debugRecordException = 'DEBUG_RECORD_record_exception';
+  static const String debugRecordEndVideo = 'DEBUG_RECORD_end_video';
+  static const String debugRecordStartVideo = 'DEBUG_RECORD_start_video';
+  static const String debugTimeCountdownStart = 'DEBUG_RECORD_time_count_down_start';
+  static const String debugEndRecordCount0 = 'DEBUG_RECORD_end_record_count_0';
 }
 
 const sendLogsTask = "com.csupporter.sendlogtask";
@@ -742,6 +767,7 @@ class StringConstants {
   static const String video_example_title = "Video Example : ";
   static const String you_should_say_content = "You should say : ";
   static const String example_title = "Example";
+  static const String verify_button_title = 'Verify';
   static const String sign_in_button_title = "Sign In";
   static const String sign_up_button_title = "Sign Up";
   static const String forgot_password_button_title = "Forgot password?";
@@ -763,6 +789,7 @@ class StringConstants {
   static const String finish_button_title = "Finish";
   static const String save_the_exam_button_title = "SAVE THE EXAM";
   static const String start_now_button_title = "Start Now";
+  static const String re_load_button_title = 'Reload';
   static const String repeat_button_title = "Repeat";
   static const String exit_button_title = "Exit";
   static const String later_button_title = "Later";
@@ -824,6 +851,7 @@ class StringConstants {
   static const String filter_choose_status_tab_title = "CHOOSE STATUS";
 
   //Text
+  static const String select_class = 'Select your class';
   static const String add_your_filter = "Add your filter!";
   static const String cue_card = "Cue Card";
   static const String another_tips = "Another tips";
@@ -861,6 +889,7 @@ class StringConstants {
       "This app needs to grant access to the microphone in order to record the answers during the exam process. Without granting permission, you will not be able to proceed with the exam.";
   static const String start_now_description =
       "Start the exam now or wait until the processing finished!";
+  static const String start_now = 'Data download is complete, click start now to continue working!';
   static const String part_1_header = "Practice Part 1";
   static const String part_2_header = "Practice Part 2";
   static const String part_3_header = "Practice Part 3";
@@ -872,7 +901,10 @@ class StringConstants {
   static const String change_password_menu_item_title = "Change password";
   static const String old_password_title = "Old Password";
   static const String logout_menu_item_title = "Logout";
+  static const String syllabus_list = 'List syllabus';
   static const String email = "Email";
+  static const String username = 'Username';
+  static const String input_key = 'Mời bạn nhập vào key';
   static const String logo_text = "REACH YOUR DREAM TARGET";
   static const String password = "Password";
   static const String retype_password = "Retype Password";
@@ -913,6 +945,7 @@ class StringConstants {
       'Your internet is not connect!';
 
   //Warning Message
+  static const String verify_wrong_massage = '';
   static const String login_wrong_message =
       "Opps! Something went wrong, email or password is not found.";
   static const String choose_filter_message =
@@ -978,6 +1011,14 @@ class StringConstants {
   static const String get_special_homework_error_message =
       "GetSpecialHomeWorks: result fail!";
 
+  static const String error_during_test_hasInternet =
+      'Part of the data has not been loaded yet. Please wait a moment to reload before returning to work!';
+  static const String error_during_test_offline =
+      'Part of the data has not been downloaded yet, please check your network connection and click reload!';
+  static const String error_during_test_click_redownload_offline = 'Network connection is unstable, please check and try again!';
+  static const String error_during_test_click_redownload_hasInternet = 'Data is being reloaded, please wait a moment before returning to work!';
+  static const String download_again_complete = 'The data is complete, please continue to complete the assignment!';
+
   //keywords
   static const String k_email = "email";
   static const String k_password = "password";
@@ -1006,6 +1047,9 @@ class StringConstants {
   static const String k_accept = "'Accept'";
   static const String k_file_name = "file_name";
   static const String k_file_path = "file_path";
+  static const String k_file_audio_path = 'file_audio_path';
+  static const String k_duration_file_audio = 'duration_file_audio';
+  static const String k_size_file_audio = 'size_file_audio';
   static const String k_file_download_info = "file_download_info";
   static const String k_response = "response";
   static const String k_request_data = "request_data";
@@ -1026,6 +1070,10 @@ class StringConstants {
   static const String k_test_option = "option";
   static const String k_required_topic = "required_topic[]";
   static const String k_is_predict = "is_predict";
+  static const String k_finish_test = 'finish_test';
+  static const String k_doing_status = 'doing_status';
+  static const String k_event = 'event';
+  static const String k_exception = 'exception';
 
   static const String connectivity_name_none = "none";
 }
