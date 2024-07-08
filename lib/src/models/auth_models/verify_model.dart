@@ -1,12 +1,12 @@
 class VerifyModel {
-  int? errorCode;
-  String? status;
+  int errorCode;
+  String status;
   Data? data;
   String? messages;
 
   VerifyModel({
-    this.errorCode,
-    this.status,
+    required this.errorCode,
+    required this.status,
     this.data,
     this.messages,
   });
@@ -29,23 +29,19 @@ class VerifyModel {
 class Data {
   String expireTime;
   String merchantId;
-  int configKey;
 
   Data({
     required this.expireTime,
     required this.merchantId,
-    required this.configKey
   });
 
   factory Data.fromJson(Map<String, dynamic> json) => Data(
     expireTime: json["expire_time"],
     merchantId: json["merchant_id"],
-    configKey: json['config_key']
   );
 
   Map<String, dynamic> toJson() => {
     "expire_time": expireTime,
     "merchant_id": merchantId,
-    'config_key': configKey
   };
 }

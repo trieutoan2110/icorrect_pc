@@ -10,15 +10,13 @@ import '../../../../core/app_colors.dart';
 import '../../../models/ui_models/download_info.dart';
 
 class DownloadProgressingWidget extends StatefulWidget {
-  DownloadProgressingWidget(this.downloadInfo, {super.key, required this.reDownload, required this.visible, this.isSyllabus});
+  DownloadProgressingWidget(this.downloadInfo, {super.key, required this.reDownload, required this.visible});
 
   DownloadInfo downloadInfo;
 
   final Function reDownload;
 
   final bool visible;
-
-  bool? isSyllabus;
 
   @override
   State<DownloadProgressingWidget> createState() => _DownloadProgressingWidgetState();
@@ -67,7 +65,9 @@ class _DownloadProgressingWidgetState extends State<DownloadProgressingWidget> {
 
           const SizedBox(height: 8),
           Text(
-              setTitle(),
+              widget.visible?
+              Utils.instance().multiLanguage(StringConstants.download_again_complete) :
+              '${Utils.instance().multiLanguage(StringConstants.downloading)}...',
               style: const TextStyle(
                   color: AppColors.defaultLightPurpleColor,
                   fontSize: 17,
@@ -100,20 +100,5 @@ class _DownloadProgressingWidgetState extends State<DownloadProgressingWidget> {
           const AlwaysStoppedAnimation<Color>(AppColors.defaultPurpleColor),
       value: widget.downloadInfo.downloadPercent,
     );
-  }
-
-  String setTitle() {
-    if (widget.isSyllabus != null) {
-      return 'Giáo trình đang được tải về, xin vui lòng đảm bảo kết nối mạng!';
-    } else {
-      if (widget.visible) {
-        return Utils.instance().multiLanguage(
-            StringConstants.download_again_complete);
-      }
-      else {
-        return '${Utils.instance().multiLanguage(
-            StringConstants.downloading)}...';
-      }
-    }
   }
 }

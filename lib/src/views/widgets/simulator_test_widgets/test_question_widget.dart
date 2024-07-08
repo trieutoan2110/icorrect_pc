@@ -199,8 +199,9 @@ class TestQuestionWidget extends StatelessWidget {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.start,
                             children: [
-                              if (canReanswer)
-                                InkWell(
+                              Visibility(
+                                visible: canReanswer,
+                                child: InkWell(
                                   onTap: () {
                                     playReAnswerCallBack(question, index);
                                   },
@@ -213,7 +214,8 @@ class TestQuestionWidget extends StatelessWidget {
                                       fontSize: 16,
                                     ),
                                   ),
-                                ),
+                                ),),
+
                               Visibility(
                                 visible: question.tips.isNotEmpty,
                                 child: Row(
@@ -252,6 +254,7 @@ class TestQuestionWidget extends StatelessWidget {
                         splashColor: Colors.transparent,
                         hoverColor: Colors.transparent,
                         onTap: () {
+                          print(snapshot.data);
                           showDialog(
                               context: context,
                               builder: (context) {

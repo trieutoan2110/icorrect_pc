@@ -490,12 +490,7 @@ class LogEvent {
   static const String callApiGetUserInfo = 'call_api_get_user_info';
   static const String callApiLogout = 'call_api_logout';
   static const String callApiGetListHomework = 'call_api_get_list_homework';
-  static const String callApiGetListSyllabus = 'call_api_get_list_syllabus';
-  static const String callApiGetListFileSyllabus = 'call_api_get_list_file_syllabus';
   static const String callApiGetListClass = 'call_api_get_list_class';
-  static const String callApiGetListStudent = 'call_api_get_list_student';
-  static const String callApiVerifyConfig = 'call_api_verify_config';
-  static const String callApiChangeDeviceName = 'call_api_change_device_name';
   static const String callApiChangePassword = 'call_api_change_password';
   static const String callApiGetTestDetail =
       'call_api_get_test_detail'; //api/v1/ielts-test/syllabus/create
@@ -548,6 +543,7 @@ class LogEvent {
   static const String actionCloseApp = 'action_close_app';
   // static const String action
   static const String debugCallStartCountdown = 'DEBUG_RECORD_call_start_count_down';
+  static const String debugStartCountdown = 'DEBUG_RECORD_start_count_down';
   static const String debugStartRecordQuestion = 'DEBUG_RECORD_start_record_question';
   static const String debugClickFinishStopRecord = 'DEBUG_RECORD_click_finish_stop_recording';
   static const String debugStopRecordClickRepeat = 'DEBUG_RECORD_stop_record_when_click_repeat';
@@ -901,7 +897,6 @@ class StringConstants {
   static const String change_password_menu_item_title = "Change password";
   static const String old_password_title = "Old Password";
   static const String logout_menu_item_title = "Logout";
-  static const String syllabus_list = 'List syllabus';
   static const String email = "Email";
   static const String username = 'Username';
   static const String input_key = 'Mời bạn nhập vào key';

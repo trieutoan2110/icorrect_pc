@@ -108,7 +108,7 @@ class _ViewOtherStudentAnswersState extends State<ViewOtherStudentAnswers> {
     return Consumer<StudentTestProvider>(builder: (context, provider, child) {
       return TestQuestionWidget(
           isExam: false,
-          testId: widget.activitiesModel.activityAnswer!.testId,
+          testId: 0,
           questions: provider.questionsList,
           canPlayAnswer: true,
           canReanswer: false,

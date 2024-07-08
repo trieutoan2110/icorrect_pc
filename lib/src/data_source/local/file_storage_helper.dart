@@ -62,30 +62,6 @@ class FileStorageHelper {
     return hideDirectory.path;
   }
 
-  static Future<String> getFolderSyllabusPath(
-      MediaType mediaType, String syllabus) async {
-    final path = await _getRootPath;
-
-    String folder = '';
-    if (mediaType == MediaType.video) {
-      folder = StringClass.video;
-    } else if (mediaType == MediaType.audio) {
-      folder = StringClass.audio;
-    } else {
-      folder = StringClass.image;
-    }
-
-    String filePath = '';
-
-    filePath = '$path\\$folder\\$syllabus';
-
-    Directory hideDirectory = Directory(filePath);
-    if (!hideDirectory.existsSync()) {
-      hideDirectory.createSync();
-    }
-    return hideDirectory.path;
-  }
-
   static Future<String> getFolderPathVideoDIO(
       MediaType mediaType, String? testId) async {
     final path = await _getRootPath;
@@ -178,47 +154,6 @@ class FileStorageHelper {
       print('Có lỗi xảy ra: $e');
     }
     return '';
-  }
-
-  static Future<double> getSizeFolder(String folderName) async {
-    double totalSize = 0.00;
-    final path = await getFolderPath(MediaType.video, null);
-    String folderPath = '$path\\$folderName';
-
-    if (await Directory(folderPath).exists()) {
-      // List all files and directories in the directory
-      List<FileSystemEntity> entities = Directory(folderPath).listSync(recursive: true, followLinks: false);
-
-      // Iterate over each entity
-      for (FileSystemEntity entity in entities) {
-        if (entity is File) {
-          // If it's a file, add its size to the total size
-          totalSize += await entity.length();
-        }
-      }
-    }
-    return totalSize;
-  }
-
-  static Future<bool> deleteFolder(String folderName) async {
-    try {
-      final path = await getFolderPath(MediaType.video, null);
-      String folderPath = '$path\\$folderName';
-      if (await Directory(folderPath).exists()) {
-        await for (var entity in Directory(folderPath).list(recursive: true, followLinks: false)) {
-          if (entity is File) {
-            await entity.delete();
-          }
-        }
-        await Directory(folderPath).delete();
-      }
-      return true;
-    } catch (e) {
-      if (kDebugMode) {
-        print('DEBUG: Error when delete folder: ${e.toString()}');
-      }
-      return false;
-    }
   }
 
   static Future<bool> deleteFile(

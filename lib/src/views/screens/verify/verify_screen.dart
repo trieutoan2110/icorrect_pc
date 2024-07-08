@@ -2,17 +2,20 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:icorrect_pc/src/data_source/constants.dart';
-import 'package:icorrect_pc/src/models/auth_models/student_merchant_model.dart';
+import 'package:icorrect_pc/src/data_source/local/app_shared_references.dart';
 import 'package:icorrect_pc/src/presenters/login_presenter.dart';
 import 'package:icorrect_pc/src/presenters/verify_presenter.dart';
 import 'package:icorrect_pc/src/providers/auth_widget_provider.dart';
 import 'package:icorrect_pc/src/providers/verify_provider.dart';
-import 'package:icorrect_pc/src/views/screens/home/list_class_screen.dart';
+import 'package:icorrect_pc/src/views/screens/auth/login_screen.dart';
+import 'package:icorrect_pc/src/views/screens/verify/verify_login_screen.dart';
 
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/app_colors.dart';
 import '../../../models/auth_models/class_merchant_model.dart';
+import '../../../utils/Navigations.dart';
 import '../../../utils/utils.dart';
 import '../../dialogs/circle_loading.dart';
 import '../../dialogs/message_alert.dart';
@@ -25,21 +28,20 @@ class VerifyWidget extends StatefulWidget {
   State<VerifyWidget> createState() => _VerifyWidget();
 }
 
-class _VerifyWidget extends State<VerifyWidget> implements LoginViewContract {
+class _VerifyWidget extends State<VerifyWidget> implements VerifyViewContact {
   CircleLoading? _loading;
   late AuthWidgetProvider _provider;
   late VerifyProvider _verifyProvider;
-  late LoginPresenter _presenter;
+  late VerifyPresenter _verifyPresenter;
 
   final _txtLicenseController = TextEditingController();
-  final _txtDeviceNameController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _loading = CircleLoading();
     _autoVerify();
-    _presenter = LoginPresenter(this);
+    _verifyPresenter = VerifyPresenter(this);
     _provider = Provider.of<AuthWidgetProvider>(context, listen: false);
     _verifyProvider = Provider.of<VerifyProvider>(context, listen: false);
   }
@@ -57,7 +59,7 @@ class _VerifyWidget extends State<VerifyWidget> implements LoginViewContract {
 
   Widget _buildVerifyForm() {
     double w = MediaQuery.of(context).size.width / 2;
-    double h = MediaQuery.of(context).size.height / 2;
+    double h = MediaQuery.of(context).size.height / 3;
     return Center(
       child: Container(
         width: w,
@@ -81,8 +83,8 @@ class _VerifyWidget extends State<VerifyWidget> implements LoginViewContract {
                 },
                 style: ButtonStyle(
                     backgroundColor:
-                    WidgetStateProperty.all<Color>(AppColors.purple),
-                    shape: WidgetStateProperty.all(RoundedRectangleBorder(
+                    MaterialStateProperty.all<Color>(AppColors.purple),
+                    shape: MaterialStateProperty.all(RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(13)))),
                 child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 10),
@@ -100,6 +102,7 @@ class _VerifyWidget extends State<VerifyWidget> implements LoginViewContract {
 
   Widget _buildKeyField() {
     return Column(
+      // crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         const Text(StringConstants.input_key,
@@ -110,45 +113,35 @@ class _VerifyWidget extends State<VerifyWidget> implements LoginViewContract {
         const SizedBox(height: 15),
         TextField(
           controller: _txtLicenseController,
-          decoration: InputFieldCustom.init().borderGray10('Key'),
-        ),
-        const SizedBox(
-          height: 20,
-        ),
-        TextField(
-          controller: _txtDeviceNameController,
-          decoration: InputFieldCustom.init().borderGray10('Tên máy'),
+          decoration:
+          InputFieldCustom.init().borderGray10('Key'),
         )
       ],
     );
   }
 
   void _autoVerify() async {
+    // AppSharedPref.instance().clearShared();
     _loading?.show(context);
     String licenseKey = await Utils.instance().getLicenseKey() ?? '';
-    String deviceName = await Utils.instance().getDeviceNameForSchool() ?? '';
-    // String merchantID = await Utils.instance().getMerchantID() ?? '';
+    String merchantID = await Utils.instance().getMerchantID() ?? '';
     Timer(const Duration(seconds: 2), () {
-      // if (licenseKey.isNotEmpty && merchantID.isNotEmpty) {
-      //   _verifyPresenter.getListClass(context, merchantID);
-      // }
-      _presenter.verify(context, licenseKey, deviceName);
-      // _loading?.hide();
+      if (licenseKey.isNotEmpty && merchantID.isNotEmpty) {
+        _verifyPresenter.getListClass(context, merchantID);
+      }
+      _loading?.hide();
     });
   }
 
-  void _onPressVerify() async{
+  void _onPressVerify() {
     String license = _txtLicenseController.text.trim();
-    String deviceName = _txtDeviceNameController.text.trim();
-    _presenter.verify(context, license, deviceName);
+    _verifyPresenter.verify(context, license);
   }
 
   @override
   void onVerifyComplete(String merchantID) {
     // _loading?.hide();
-    // _presenter.getListClass(context, merchantID);
-    Navigator.push(context, MaterialPageRoute(builder: (context) => const ListClassWidget(),));
-    _loading?.hide();
+    _verifyPresenter.getListClass(context, merchantID);
   }
 
   @override
@@ -163,9 +156,9 @@ class _VerifyWidget extends State<VerifyWidget> implements LoginViewContract {
   }
 
   @override
-  void onGetListClassComplete(List<ClassModel> classes) {
+  void onGetListClassComplete(List<Datum> classes) {
     _verifyProvider.setListClass(classes);
-    Navigator.push(context, MaterialPageRoute(builder: (context) => const ListClassWidget(),));
+    _provider.setCurrentScreen(const LoginVerifyWidget());
     _loading?.hide();
   }
 
@@ -178,45 +171,5 @@ class _VerifyWidget extends State<VerifyWidget> implements LoginViewContract {
         builder: (context) {
           return MessageDialog(context: context, message: message);
         });
-  }
-
-  @override
-  void onGetListStudentComplete(List<StudentModel> list) {
-    // TODO: implement onGetListStudentComplete
-  }
-
-  @override
-  void onGetListStudentError(String message) {
-    // TODO: implement onGetListStudentError
-  }
-
-  @override
-  void onVerifyConfigError(String message) {
-    // TODO: implement onVeriftConfigError
-  }
-
-  @override
-  void onVerifyConfigComplete() {
-    // TODO: implement onVerifyConfigComplete
-  }
-
-  @override
-  void onChangeDeviceNameComplete(String msg) {
-    // TODO: implement onChangeDeviceNameComplete
-  }
-
-  @override
-  void onChangeDeviceNameError(String msg) {
-    // TODO: implement onChangeDeviceNameError
-  }
-
-  @override
-  void onLoginComplete() {
-    // TODO: implement onLoginComplete
-  }
-
-  @override
-  void onLoginError(String message) {
-    // TODO: implement onLoginError
   }
 }

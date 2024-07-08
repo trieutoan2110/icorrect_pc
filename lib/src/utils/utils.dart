@@ -1,14 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:crypto/crypto.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localization/flutter_localization.dart';
 import 'package:icorrect_pc/src/models/ui_models/user_authen_status.dart';
-import 'package:icorrect_pc/src/presenters/verify_presenter.dart';
 import 'package:icorrect_pc/src/providers/auth_widget_provider.dart';
 import 'package:icorrect_pc/src/providers/home_provider.dart';
 import 'package:icorrect_pc/src/providers/main_widget_provider.dart';
@@ -355,33 +353,6 @@ class Utils {
 
   Future<String?> getLicenseKey() {
     return AppSharedPref.instance().getString(key: AppSharedKeys.licenseKey);
-  }
-
-  void setDeviceNameForSchool(String deviceName) {
-    AppSharedPref.instance().putString(key: AppSharedKeys.deviceName, value: deviceName);
-  }
-
-  Future<String?> getDeviceNameForSchool() {
-    return AppSharedPref.instance().getString(key: AppSharedKeys.deviceName);
-  }
-
-  Future<String> convertHMacSha256({String? param1, String? param2, String? param3}) async {
-    String? licenseKey = await getLicenseKey();
-    var key = utf8.encode(licenseKey!);
-    String paramQuery = '';
-    if (param1 != null) {
-      paramQuery += param1;
-    }
-    if (param2 != null) {
-      paramQuery += '|$param2';
-    }
-    if (param3 != null) {
-      paramQuery += '|$param3';
-    }
-    var bytes = utf8.encode(paramQuery);
-    var hmacSha256 = Hmac(sha256, key);
-    var checksum = hmacSha256.convert(bytes);
-    return checksum.toString();
   }
 
   void setCookiesTime(String saveTime) {

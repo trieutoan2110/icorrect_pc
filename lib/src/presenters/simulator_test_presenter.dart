@@ -370,9 +370,9 @@ class SimulatorTestPresenter {
           MediaType mediaType = Utils.instance().mediaType(fileTopic);
           bool isExist = await FileStorageHelper.newCheckExistFile(
               fileTopic, mediaType);
+          savePath =
+          '${await FileStorageHelper.getFolderPath(mediaType, null)}\\$fileTopic';
           if (fileType.isNotEmpty && !isExist) {
-            savePath =
-            '${await FileStorageHelper.getFolderPath(mediaType, null)}\\$fileTopic';
             LogModel? log;
             if (context.mounted) {
               log = await Utils.instance().prepareToCreateLog(context,
@@ -396,6 +396,8 @@ class SimulatorTestPresenter {
                 print("DEBUG: Downloading file at index = $index");
               }
 
+              // savePath =
+              //     '${await FileStorageHelper.getFolderPath(mediaType, null)}\\$fileTopic';
               FilePathModel filePathModel = FilePathModel(savePath: savePath, isSuccess: false);
 
               if (dio == null) {
@@ -411,7 +413,6 @@ class SimulatorTestPresenter {
               _view!.onDownloadFailure(AlertClass.downloadVideoErrorAlert, filePathModel);
 
               Response response = await dio!.download(url, savePath);
-              print(savePath);
               if (response.statusCode == 200) {
                 //Add log
                 Utils.instance().prepareLogData(
@@ -445,8 +446,6 @@ class SimulatorTestPresenter {
               break loop;
             }
           } else {
-            savePath = await FileStorageHelper.newGetFilePath(fileTopic, mediaType);
-            print(savePath);
             double percent = _getPercent(index + 1, filesTopic.length);
             _view!.onDownloadSuccess(
                 testDetail, fileTopic, percent, index + 1, filesTopic.length, FilePathModel(savePath: savePath, isSuccess: true));

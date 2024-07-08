@@ -22,16 +22,16 @@ class ActivitiesModel {
 
   ActivitiesModel(
       {int? classId,
-        int? syllabusId,
-        int? activityId,
-        String? activityName,
-        String? activityEndTime,
-        String? activityReleaseTime,
-        String? activityType,
-        int? activityStatus,
-        String? activityTestOption,
+      int? syllabusId,
+      int? activityId,
+      String? activityName,
+      String? activityEndTime,
+      String? activityReleaseTime,
+      String? activityType,
+      int? activityStatus,
+      String? activityTestOption,
         int? activityPackageId,
-        ActivityAnswer? activityAnswer}) {
+      ActivityAnswer? activityAnswer}) {
     _classId = classId;
     _syllabusId = syllabusId;
     _activityId = activityId;
@@ -84,7 +84,7 @@ class ActivitiesModel {
 
   bool canReanswer() {
     if (_activityAnswer != null &&
-        (_activityAnswer!.aiOrder != 0 || _activityAnswer!.orderId != 0) ||
+            (_activityAnswer!.aiOrder != 0 || _activityAnswer!.orderId != 0) ||
         _activityType != 'homework') {
       return false;
     }

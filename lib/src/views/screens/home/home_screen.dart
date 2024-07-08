@@ -1,15 +1,22 @@
+import 'dart:collection';
+
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:icorrect_pc/core/camera_service.dart';
 import 'package:icorrect_pc/src/data_source/constants.dart';
+import 'package:icorrect_pc/src/models/homework_models/class_model.dart';
+import 'package:icorrect_pc/src/models/homework_models/homework_model.dart';
 import 'package:icorrect_pc/src/models/homework_models/new_api_135/activities_model.dart';
 import 'package:icorrect_pc/src/models/user_data_models/user_data_model.dart';
 import 'package:icorrect_pc/src/providers/auth_widget_provider.dart';
 import 'package:icorrect_pc/src/providers/home_provider.dart';
-import 'package:icorrect_pc/src/providers/main_widget_provider.dart';
 import 'package:icorrect_pc/src/views/widgets/grid_view_widget.dart';
+import 'package:icorrect_pc/src/views/widgets/simulator_test_widgets/download_progressing_widget.dart';
 
 import 'package:provider/provider.dart';
+import 'package:video_player/video_player.dart';
 import 'package:window_manager/window_manager.dart';
 
 import '../../../../core/app_colors.dart';
@@ -31,29 +38,23 @@ class HomeWorksWidget extends StatefulWidget {
   State<HomeWorksWidget> createState() => _HomeWorksWidgetState();
 }
 
-class _HomeWorksWidgetState extends State<HomeWorksWidget> with WindowListener
+class _HomeWorksWidgetState extends State<HomeWorksWidget>
     implements HomeWorkViewContract {
   double w = 0, h = 0;
   late HomeProvider _provider;
   String _choosenStatus = '';
-  bool _dialogNotShowing = true;
 
   CircleLoading? _loading;
   late HomeWorkPresenter _presenter;
   CameraPreviewProvider? _cameraPreviewProvider;
-  MainWidgetProvider? _mainWidgetProvider;
 
   @override
   void initState() {
-    if (!windowManager.hasListeners) {
-    windowManager.addListener(this);
-    }
     super.initState();
-    _init();
     _provider = Provider.of<HomeProvider>(context, listen: false);
     _cameraPreviewProvider =
         Provider.of<CameraPreviewProvider>(context, listen: false);
-    _mainWidgetProvider = Provider.of<MainWidgetProvider>(context, listen: false);
+
     _choosenStatus = _provider.statusSelections.first;
     _loading = CircleLoading();
 
@@ -66,28 +67,15 @@ class _HomeWorksWidgetState extends State<HomeWorksWidget> with WindowListener
     });
 
     Utils.instance().sendLog();
+    // CameraService.instance().fetchCameras(provider: _cameraPreviewProvider!);
   }
 
   @override
   void dispose() {
-    windowManager.removeListener(this);
     dispose();
     super.dispose();
     _provider.dispose();
     _loading!.hide();
-  }
-
-  void _init() async {
-    await windowManager.setPreventClose(true);
-    setState(() {
-
-    });
-  }
-
-  @override
-  void onWindowClose() {
-    super.onWindowClose();
-    _showConfirmExitApp();
   }
 
   @override
@@ -120,8 +108,7 @@ class _HomeWorksWidgetState extends State<HomeWorksWidget> with WindowListener
             Container(
                 margin: const EdgeInsets.symmetric(horizontal: 170),
                 child: Row(
-                  // children: [_builClassFilter(), _buildStatusFilter()],
-                  children: [_buildStatusFilter()],
+                  children: [_builClassFilter(), _buildStatusFilter()],
                 )),
             _buildHomeworkList()
           ],
@@ -138,11 +125,10 @@ class _HomeWorksWidgetState extends State<HomeWorksWidget> with WindowListener
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Container(
-                height: 80,
-                margin: const EdgeInsets.symmetric(horizontal: 170, vertical: 10),
+                height: 200,
+                margin: const EdgeInsets.symmetric(horizontal: 170),
                 child: Column(
-                  // children: [_builClassFilter(), _buildStatusFilter()],
-                  children: [_buildStatusFilter()],
+                  children: [_builClassFilter(), _buildStatusFilter()],
                 )),
             _buildHomeworkList()
           ],
@@ -154,118 +140,118 @@ class _HomeWorksWidgetState extends State<HomeWorksWidget> with WindowListener
   Widget _builClassFilter() {
     return Expanded(
         child: Consumer<HomeProvider>(builder: (context, provider, child) {
-          return Container(
-              margin: const EdgeInsets.symmetric(horizontal: 30),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(Utils.instance().multiLanguage(StringConstants.class_filter),
-                      style: const TextStyle(
-                          color: Colors.black, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 10),
-                  DropdownButtonFormField<NewClassModel>(
-                    value: provider.classSelected,
-                    items: provider.classesList.map((NewClassModel value) {
-                      return DropdownMenuItem<NewClassModel>(
-                        value: value,
-                        child: Text(
-                          value.name,
-                          style: const TextStyle(fontSize: 15),
-                        ),
-                      );
-                    }).toList(),
-                    onChanged: (NewClassModel? newValue) {
-                      if (kDebugMode) {
-                        print("DEBUG: ${newValue!.name}");
-                      }
-                      provider.setClassSelection(newValue!);
-                      List<ActivitiesModel> activities =
+      return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 30),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(Utils.instance().multiLanguage(StringConstants.class_filter),
+                  style: const TextStyle(
+                      color: Colors.black, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 10),
+              DropdownButtonFormField<NewClassModel>(
+                value: provider.classSelected,
+                items: provider.classesList.map((NewClassModel value) {
+                  return DropdownMenuItem<NewClassModel>(
+                    value: value,
+                    child: Text(
+                      value.name,
+                      style: const TextStyle(fontSize: 15),
+                    ),
+                  );
+                }).toList(),
+                onChanged: (NewClassModel? newValue) {
+                  if (kDebugMode) {
+                    print("DEBUG: ${newValue!.name}");
+                  }
+                  provider.setClassSelection(newValue!);
+                  List<ActivitiesModel> activities =
                       _presenter.filterActivities(
                           newValue.id,
                           newValue.activities,
                           provider.statusActivity,
                           provider.currentTime);
-                      if (kDebugMode) {
-                        print("DEBUG: activities: ${activities.length}");
-                      }
-                      provider.setActivitiesFilter(activities);
-                    },
-                    decoration: InputDecoration(
-                      contentPadding:
+                  if (kDebugMode) {
+                    print("DEBUG: activities: ${activities.length}");
+                  }
+                  provider.setActivitiesFilter(activities);
+                },
+                decoration: InputDecoration(
+                  contentPadding:
                       const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-                      filled: true,
-                      fillColor: AppColors.defaultGraySlightColor,
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: const BorderSide(
-                            color: AppColors.defaultPurpleColor, width: 1),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: const BorderSide(
-                            color: AppColors.defaultPurpleColor, width: 1),
-                      ),
-                    ),
+                  filled: true,
+                  fillColor: AppColors.defaultGraySlightColor,
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(
+                        color: AppColors.defaultPurpleColor, width: 1),
                   ),
-                ],
-              ));
-        }));
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(
+                        color: AppColors.defaultPurpleColor, width: 1),
+                  ),
+                ),
+              ),
+            ],
+          ));
+    }));
   }
 
   Widget _buildStatusFilter() {
     return Expanded(
         child: Consumer<HomeProvider>(builder: (context, provider, child) {
-          return Container(
-              margin: const EdgeInsets.symmetric(horizontal: 30),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                      Utils.instance().multiLanguage(StringConstants.status_filter),
-                      style: const TextStyle(
-                          color: Colors.black, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 10),
-                  DropdownButtonFormField<String>(
-                    value: provider.statusActivity,
-                    items: provider.statusSelections.map((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(
-                          value,
-                          style: const TextStyle(fontSize: 15),
-                        ),
-                      );
-                    }).toList(),
-                    onChanged: (String? newValue) {
-                      provider.setStatusActivity(newValue!);
-                      List<ActivitiesModel> activities =
+      return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 30),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                  Utils.instance().multiLanguage(StringConstants.status_filter),
+                  style: const TextStyle(
+                      color: Colors.black, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 10),
+              DropdownButtonFormField<String>(
+                value: provider.statusActivity,
+                items: provider.statusSelections.map((String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(
+                      value,
+                      style: const TextStyle(fontSize: 15),
+                    ),
+                  );
+                }).toList(),
+                onChanged: (String? newValue) {
+                  provider.setStatusActivity(newValue!);
+                  List<ActivitiesModel> activities =
                       _presenter.filterActivities(
                           provider.classSelected.id,
                           provider.activitiesList,
                           newValue,
                           provider.currentTime);
-                      provider.setActivitiesFilter(activities);
-                    },
-                    decoration: InputDecoration(
-                      contentPadding:
+                  provider.setActivitiesFilter(activities);
+                },
+                decoration: InputDecoration(
+                  contentPadding:
                       const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-                      filled: true,
-                      fillColor: Colors.grey[200],
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: const BorderSide(
-                            color: AppColors.defaultPurpleColor, width: 1),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: const BorderSide(
-                            color: AppColors.defaultPurpleColor, width: 1),
-                      ),
-                    ),
+                  filled: true,
+                  fillColor: Colors.grey[200],
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(
+                        color: AppColors.defaultPurpleColor, width: 1),
                   ),
-                ],
-              ));
-        }));
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(
+                        color: AppColors.defaultPurpleColor, width: 1),
+                  ),
+                ),
+              ),
+            ],
+          ));
+    }));
   }
 
   Widget _buildHomeworkList() {
@@ -278,7 +264,7 @@ class _HomeWorksWidgetState extends State<HomeWorksWidget> with WindowListener
           return DottedBorder(
               borderType: BorderType.RRect,
               radius: const Radius.circular(25),
-              dashPattern: const [6, 3, 6, 3],
+              dashPattern: [6, 3, 6, 3],
               strokeWidth: 2,
               color: AppColors.defaultPurpleColor,
               child: Container(
@@ -337,21 +323,21 @@ class _HomeWorksWidgetState extends State<HomeWorksWidget> with WindowListener
     return Consumer<HomeProvider>(builder: (context, provider, child) {
       return SingleChildScrollView(
           child: Container(
-            height: height,
-            margin: const EdgeInsets.only(top: 10, bottom: 10),
-            padding: const EdgeInsets.only(bottom: 20),
-            child: (provider.activitiesFilter.isNotEmpty)
-                ? MyGridView(
+        height: height,
+        margin: const EdgeInsets.only(top: 10, bottom: 10),
+        padding: const EdgeInsets.only(bottom: 20),
+        child: (provider.activitiesFilter.isNotEmpty)
+            ? MyGridView(
                 data: provider.activitiesFilter,
                 itemWidget: (itemModel, index) {
                   return _questionItem(itemModel);
                 })
-                : NothingWidget.init().buildNothingWidget(
+            : NothingWidget.init().buildNothingWidget(
                 Utils.instance()
                     .multiLanguage(StringConstants.nothing_your_homework),
                 widthSize: 180,
                 heightSize: 180),
-          ));
+      ));
     });
   }
 
@@ -360,23 +346,23 @@ class _HomeWorksWidgetState extends State<HomeWorksWidget> with WindowListener
     return Consumer<HomeProvider>(builder: (context, provider, child) {
       return SingleChildScrollView(
           child: Container(
-            height: height,
-            margin: const EdgeInsets.only(top: 10, bottom: 10),
-            padding: const EdgeInsets.only(bottom: 20),
-            child: (provider.activitiesFilter.isNotEmpty)
-                ? ListView.builder(
+        height: height,
+        margin: const EdgeInsets.only(top: 10, bottom: 10),
+        padding: const EdgeInsets.only(bottom: 20),
+        child: (provider.activitiesFilter.isNotEmpty)
+            ? ListView.builder(
                 shrinkWrap: true,
                 itemCount: provider.activitiesFilter.length,
                 itemBuilder: (context, index) {
                   return _questionItem(
                       provider.activitiesFilter.elementAt(index));
                 })
-                : NothingWidget.init().buildNothingWidget(
+            : NothingWidget.init().buildNothingWidget(
                 Utils.instance()
                     .multiLanguage(StringConstants.nothing_your_homework),
                 widthSize: 180,
                 heightSize: 180),
-          ));
+      ));
     });
   }
 
@@ -410,7 +396,7 @@ class _HomeWorksWidgetState extends State<HomeWorksWidget> with WindowListener
                     decoration: BoxDecoration(
                         border: Border.all(width: 2, color: AppColors.purple),
                         borderRadius:
-                        const BorderRadius.all(Radius.circular(100))),
+                            const BorderRadius.all(Radius.circular(100))),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -444,13 +430,13 @@ class _HomeWorksWidgetState extends State<HomeWorksWidget> with WindowListener
                             children: [
                               (homeWork.isExam())
                                   ? Text(
-                                  Utils.instance().multiLanguage(
-                                      StringConstants.test_status),
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                      fontSize: 17,
-                                      color: Colors.black,
-                                      fontWeight: FontWeight.bold))
+                                      Utils.instance().multiLanguage(
+                                          StringConstants.test_status),
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                          fontSize: 17,
+                                          color: Colors.black,
+                                          fontWeight: FontWeight.bold))
                                   : Container(),
                               SizedBox(
                                 width: _getSizeTextResponse(),
@@ -501,49 +487,49 @@ class _HomeWorksWidgetState extends State<HomeWorksWidget> with WindowListener
                 ],
               ),
               (activityStatus == Status.notComplete.get ||
-                  activityStatus == Status.outOfDate.get ||
-                  homeWork.activityStatus == Status.loadedTest.get)
+                      activityStatus == Status.outOfDate.get ||
+                      homeWork.activityStatus == Status.loadedTest.get)
                   ? SizedBox(
-                width: 100,
-                child: ElevatedButton(
-                  onPressed: () async {
-                    _onClickStartTest(homeWork);
-                  },
-                  style: ButtonStyle(
-                      backgroundColor: WidgetStateProperty.all<Color>(
-                          AppColors.purple),
-                      shape: WidgetStateProperty.all(
-                          RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(5)))),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    child: Text(
-                        Utils.instance()
-                            .multiLanguage(StringConstants.start_title),
-                        style: const TextStyle(color: Colors.white)),
-                  ),
-                ),
-              )
+                      width: 100,
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          _onClickStartTest(homeWork);
+                        },
+                        style: ButtonStyle(
+                            backgroundColor: MaterialStateProperty.all<Color>(
+                                AppColors.purple),
+                            shape: MaterialStateProperty.all(
+                                RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(5)))),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          child: Text(
+                              Utils.instance()
+                                  .multiLanguage(StringConstants.start_title),
+                              style: const TextStyle(color: Colors.white)),
+                        ),
+                      ),
+                    )
                   : SizedBox(
-                width: 100,
-                child: ElevatedButton(
-                    onPressed: () async {
-                      _onClickMyTest(homeWork);
-                    },
-                    style: ButtonStyle(
-                        backgroundColor: WidgetStateProperty.all<Color>(
-                            Colors.green),
-                        shape: WidgetStateProperty.all(
-                            RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(5)))),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      child: Text(
-                          Utils.instance().multiLanguage(
-                              StringConstants.detail_title),
-                          style: const TextStyle(color: Colors.white)),
-                    )),
-              )
+                      width: 100,
+                      child: ElevatedButton(
+                          onPressed: () async {
+                            _onClickMyTest(homeWork);
+                          },
+                          style: ButtonStyle(
+                              backgroundColor: MaterialStateProperty.all<Color>(
+                                  Colors.green),
+                              shape: MaterialStateProperty.all(
+                                  RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(5)))),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            child: Text(
+                                Utils.instance().multiLanguage(
+                                    StringConstants.detail_title),
+                                style: const TextStyle(color: Colors.white)),
+                          )),
+                    )
             ],
           ),
         )
@@ -609,33 +595,16 @@ class _HomeWorksWidgetState extends State<HomeWorksWidget> with WindowListener
 
     Utils.instance().checkInternetConnection().then((isConnected) async {
       if (isConnected) {
-        showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return CustomAlertDialog(
-              title: Utils.instance().multiLanguage(StringConstants.dialog_title),
-              description: 'Bạn có muốn bắt đầu làm bài: ${homeWork.activityName}, với tài khoản là ${_mainWidgetProvider!.titleMain} không?',
-              okButtonTitle: StringConstants.ok_button_title,
-              cancelButtonTitle: Utils.instance().multiLanguage(StringConstants.cancel_button_title),
-              borderRadius: 8,
-              hasCloseButton: false,
-              okButtonTapped: () async {
-                Navigations.instance()
-                    .goToSimulatorTestRoom(context, activitiesModel: homeWork);
-                //Add action log
-                LogModel actionLog = await Utils.instance().prepareToCreateLog(context,
-                    action: LogEvent.actionClickOnHomeworkItem);
-                actionLog.addData(
-                    key: StringConstants.k_activity_id,
-                    value: homeWork.activityId.toString());
-                Utils.instance().addLog(actionLog, LogEvent.none);
-              },
-              cancelButtonTapped: () {
-                Navigator.of(context).pop();
-              },
-            );
-          },
-        );
+        Navigations.instance()
+            .goToSimulatorTestRoom(context, activitiesModel: homeWork);
+
+        //Add action log
+        LogModel actionLog = await Utils.instance().prepareToCreateLog(context,
+            action: LogEvent.actionClickOnHomeworkItem);
+        actionLog.addData(
+            key: StringConstants.k_activity_id,
+            value: homeWork.activityId.toString());
+        Utils.instance().addLog(actionLog, LogEvent.none);
       } else {
         _handleConnectionError();
       }
@@ -667,35 +636,6 @@ class _HomeWorksWidgetState extends State<HomeWorksWidget> with WindowListener
     Utils.instance().showConnectionErrorDialog(context);
 
     Utils.instance().addConnectionErrorLog(context);
-  }
-
-  void _showConfirmExitApp() async {
-    if (_dialogNotShowing) {
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (BuildContext context) {
-          return CustomAlertDialog(
-            title: Utils.instance().multiLanguage(StringConstants.dialog_title),
-            description: 'Bạn có chắc chắn muốn thoát khỏi phần mềm?',
-            okButtonTitle:
-            'Xác nhận',
-            cancelButtonTitle: 'Để sau',
-            borderRadius: 8,
-            hasCloseButton: false,
-            okButtonTapped: () {
-              _dialogNotShowing = true;
-              windowManager.destroy();
-            },
-            cancelButtonTapped: () {
-              _dialogNotShowing = true;
-              Navigator.of(context).pop();
-            },
-          );
-        },
-      );
-      _dialogNotShowing = false;
-    }
   }
 
   @override

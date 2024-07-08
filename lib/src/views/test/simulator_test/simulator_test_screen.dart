@@ -14,7 +14,6 @@ import 'package:icorrect_pc/src/models/ui_models/alert_info.dart';
 import 'package:icorrect_pc/src/models/ui_models/download_info.dart';
 import 'package:icorrect_pc/src/providers/auth_widget_provider.dart';
 import 'package:icorrect_pc/src/providers/my_test_provider.dart';
-import 'package:icorrect_pc/src/providers/window_manager_provider.dart';
 import 'package:icorrect_pc/src/utils/navigations.dart';
 import 'package:icorrect_pc/src/views/dialogs/circle_loading.dart';
 import 'package:icorrect_pc/src/views/test/my_test/highlight_activities.dart';
@@ -32,6 +31,7 @@ import '../../../models/log_models/log_model.dart';
 import '../../../presenters/simulator_test_presenter.dart';
 import '../../../providers/camera_preview_provider.dart';
 import '../../../providers/simulator_test_provider.dart';
+import '../../../providers/window_manager_provider.dart';
 import '../../../utils/utils.dart';
 import '../../dialogs/alert_dialog.dart';
 import '../../dialogs/custom_alert_dialog.dart';
@@ -44,10 +44,10 @@ import '../../widgets/simulator_test_widgets/start_now_button_widget.dart';
 class SimulatorTestScreen extends StatefulWidget {
   const SimulatorTestScreen(
       {super.key,
-        this.homeWorkModel,
-        this.testOption,
-        this.topicsId,
-        this.isPredict});
+      this.homeWorkModel,
+      this.testOption,
+      this.topicsId,
+      this.isPredict});
   final ActivitiesModel? homeWorkModel;
   final int? testOption;
   final List<int>? topicsId;
@@ -149,7 +149,6 @@ class _SimulatorTestScreenState extends State<SimulatorTestScreen>
     _getTestDetail();
   }
 
-
   void _init() async {
     await windowManager.setPreventClose(true);
     setState(() {
@@ -171,36 +170,41 @@ class _SimulatorTestScreenState extends State<SimulatorTestScreen>
           if (kDebugMode) {
             print("DEBUG: Status is doing the test!");
           }
-          if (mounted) {
-            await showDialog(
-              context: context,
-              builder: (BuildContext context) {
-                return CustomAlertDialog(
-                  title: Utils.instance()
-                      .multiLanguage(StringConstants.dialog_title),
-                  description: Utils.instance()
-                      .multiLanguage(
-                      StringConstants.exit_while_testing_confirm),
-                  okButtonTitle: StringConstants.ok_button_title,
-                  cancelButtonTitle: Utils.instance()
-                      .multiLanguage(StringConstants.cancel_button_title),
-                  borderRadius: 8,
-                  hasCloseButton: false,
-                  okButtonTapped: () async {
-                    _createLog(action: LogEvent.actionCloseApp,
-                        data: {
-                          StringConstants
-                              .k_doing_status: _simulatorTestProvider!
-                              .doingStatus.name
-                        });
-                    await windowManager.destroy();
-                  },
-                  cancelButtonTapped: () {
-                    Navigator.of(context).pop();
-                  },
-                );
-              },
-            );
+          if (_dialogNotShowing) {
+            if (mounted) {
+              _dialogNotShowing = false;
+              await showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return CustomAlertDialog(
+                    title: Utils.instance()
+                        .multiLanguage(StringConstants.dialog_title),
+                    description: Utils.instance()
+                        .multiLanguage(
+                        StringConstants.exit_while_testing_confirm),
+                    okButtonTitle: StringConstants.ok_button_title,
+                    cancelButtonTitle: Utils.instance()
+                        .multiLanguage(StringConstants.cancel_button_title),
+                    borderRadius: 8,
+                    hasCloseButton: false,
+                    okButtonTapped: () async {
+                      _dialogNotShowing = true;
+                      _createLog(action: LogEvent.actionCloseApp,
+                          data: {
+                            StringConstants
+                                .k_doing_status: _simulatorTestProvider!
+                                .doingStatus.name
+                          });
+                      await windowManager.destroy();
+                    },
+                    cancelButtonTapped: () {
+                      _dialogNotShowing = true;
+                      Navigator.of(context).pop();
+                    },
+                  );
+                },
+              );
+            }
           }
           break;
         }
@@ -210,33 +214,42 @@ class _SimulatorTestScreenState extends State<SimulatorTestScreen>
           if (kDebugMode) {
             print("DEBUG: Status is finish doing the test!");
           }
-
-          await showDialog(
-            context: context,
-            builder: (BuildContext context) {
-              return CustomAlertDialog(
-                title: Utils.instance()
-                    .multiLanguage(StringConstants.dialog_title),
-                description: Utils.instance()
-                    .multiLanguage(StringConstants.save_before_exit_message),
-                okButtonTitle: Utils.instance()
-                    .multiLanguage(StringConstants.save_button_title),
-                cancelButtonTitle: Utils.instance()
-                    .multiLanguage(StringConstants.dont_save_button_title),
-                borderRadius: 8,
-                hasCloseButton: false,
-                okButtonTapped: () async {
-                  //Submit
-                  _createLog(action: LogEvent.actionCloseApp, data: {StringConstants.k_doing_status: _simulatorTestProvider!.doingStatus.name});
-                  _onSubmitTest();
-                  await windowManager.destroy();
-                },
-                cancelButtonTapped: () {
-                  Navigator.of(context).pop();
-                },
-              );
-            },
-          );
+          if (_dialogNotShowing) {
+            _dialogNotShowing = false;
+            await showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return CustomAlertDialog(
+                  title: Utils.instance()
+                      .multiLanguage(StringConstants.dialog_title),
+                  description: Utils.instance()
+                      .multiLanguage(StringConstants.save_before_exit_message),
+                  okButtonTitle: Utils.instance()
+                      .multiLanguage(StringConstants.save_button_title),
+                  cancelButtonTitle: Utils.instance()
+                      .multiLanguage(StringConstants.dont_save_button_title),
+                  borderRadius: 8,
+                  hasCloseButton: false,
+                  okButtonTapped: () async {
+                    _dialogNotShowing = true;
+                    //Submit
+                    _createLog(action: LogEvent.actionCloseApp,
+                        data: {
+                          StringConstants
+                              .k_doing_status: _simulatorTestProvider!
+                              .doingStatus.name
+                        });
+                    _onSubmitTest();
+                    await windowManager.destroy();
+                  },
+                  cancelButtonTapped: () {
+                    _dialogNotShowing = true;
+                    Navigator.of(context).pop();
+                  },
+                );
+              },
+            );
+          }
 
           break;
         }
@@ -249,47 +262,47 @@ class _SimulatorTestScreenState extends State<SimulatorTestScreen>
     h = MediaQuery.of(context).size.height;
     return Scaffold(
         body: Stack(
-          children: [
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              child: Row(
-                children: [
-                  InkWell(
-                    onTap: _backButtonTapped,
-                    child: Container(
-                      width: 30,
-                      height: 30,
-                      alignment: Alignment.centerLeft,
-                      margin: const EdgeInsets.symmetric(horizontal: 10),
-                      child: const Icon(
-                        Icons.arrow_back_outlined,
-                        color: AppColors.defaultPurpleColor,
-                        size: 30,
-                      ),
-                    ),
+      children: [
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          child: Row(
+            children: [
+              InkWell(
+                onTap: _backButtonTapped,
+                child: Container(
+                  width: 30,
+                  height: 30,
+                  alignment: Alignment.centerLeft,
+                  margin: const EdgeInsets.symmetric(horizontal: 10),
+                  child: const Icon(
+                    Icons.arrow_back_outlined,
+                    color: AppColors.defaultPurpleColor,
+                    size: 30,
                   ),
-                  Text(
-                      (widget.homeWorkModel != null)
-                          ? widget.homeWorkModel!.activityName
-                          : "",
-                      style: const TextStyle(
-                          color: AppColors.defaultPurpleColor,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold)),
-                ],
+                ),
               ),
-            ),
-            Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
+              Text(
+                  (widget.homeWorkModel != null)
+                      ? widget.homeWorkModel!.activityName
+                      : "",
+                  style: const TextStyle(
+                      color: AppColors.defaultPurpleColor,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold)),
+            ],
+          ),
+        ),
+        Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
                   _buildBody(),
                   _buildDownloadAgain(),
-                ],
-              ),
-            ),
-          ],
-        ));
+            ],
+          ),
+        ),
+      ],
+    ));
   }
 
   @override
@@ -302,11 +315,9 @@ class _SimulatorTestScreenState extends State<SimulatorTestScreen>
     _simulatorTestPresenter!.closeClientRequest();
     _simulatorTestPresenter!.resetAutoRequestDownloadTimes();
     _windowManagerProvider.setShowExitAppDoingTest(false);
-    // if (context.mounted) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    if (context.mounted) {
       _simulatorTestProvider!.resetAll();
-    },);
-    // }
+    }
   }
 
   void _createLog(
@@ -346,7 +357,7 @@ class _SimulatorTestScreenState extends State<SimulatorTestScreen>
           builder: (BuildContext context) {
             return CustomAlertDialog(
               title:
-              Utils.instance().multiLanguage(StringConstants.dialog_title),
+                  Utils.instance().multiLanguage(StringConstants.dialog_title),
               description: Utils.instance().multiLanguage(
                   StringConstants.save_change_before_exit_message),
               okButtonTitle: StringConstants.ok_button_title,
@@ -486,7 +497,7 @@ class _SimulatorTestScreenState extends State<SimulatorTestScreen>
           _simulatorTestPresenter!.submitTest(
               context: context,
               testId:
-              _simulatorTestProvider!.currentTestDetail.testId.toString(),
+                  _simulatorTestProvider!.currentTestDetail.testId.toString(),
               activityId: activityId,
               questions: _simulatorTestProvider!.reanswersList,
               isExam: _isExam,
@@ -502,13 +513,13 @@ class _SimulatorTestScreenState extends State<SimulatorTestScreen>
           _simulatorTestPresenter!.submitTest(
               context: context,
               testId:
-              _simulatorTestProvider!.currentTestDetail.testId.toString(),
+                  _simulatorTestProvider!.currentTestDetail.testId.toString(),
               activityId: activityId,
               questions: _simulatorTestProvider!.questionList,
               isExam: _isExam,
               isUpdate: false,
               videoConfirmFile:
-              File(pathVideo).existsSync() ? File(pathVideo) : null,
+                  File(pathVideo).existsSync() ? File(pathVideo) : null,
               logAction: _simulatorTestProvider!.logActions);
         }
       } else {
@@ -542,7 +553,7 @@ class _SimulatorTestScreenState extends State<SimulatorTestScreen>
 
     for (String answer in answers) {
       FileStorageHelper.deleteFile(answer, MediaType.audio,
-          _simulatorTestProvider!.currentTestDetail.testId.toString())
+              _simulatorTestProvider!.currentTestDetail.testId.toString())
           .then((value) {
         if (false == value) {
           // showDialog(
@@ -612,71 +623,71 @@ class _SimulatorTestScreenState extends State<SimulatorTestScreen>
         );
       } else {
         return ((provider.submitStatus == SubmitStatus.success) &&
-            widget.homeWorkModel != null)
+                widget.homeWorkModel != null)
             ? Expanded(
-            child: Container(
-              // margin: const EdgeInsets.symmetric(horizontal: 50, vertical: 20),
-                margin: const EdgeInsets.fromLTRB(50, 50, 50, 20),
-                child: Scaffold(
-                  backgroundColor: const Color.fromARGB(0, 255, 255, 255),
-                  appBar: PreferredSize(
-                      preferredSize: const Size.fromHeight(40),
-                      child: Container(
-                        margin: EdgeInsets.only(
-                            left: 50,
-                            right: (w < SizeLayout.MyTestScreenSize)
-                                ? 0
-                                : 600),
-                        child: DefaultTabController(
-                            initialIndex: 0,
-                            length: (provider.submitStatus ==
-                                SubmitStatus.success)
-                                ? 3
-                                : 1,
-                            child: TabBar(
-                                controller: _tabController,
-                                indicator: BoxDecoration(
-                                    borderRadius: const BorderRadius.only(
-                                        topLeft: Radius.circular(5),
-                                        topRight: Radius.circular(5)),
-                                    border: Border.all(
-                                        color: AppColors.black, width: 2)),
-                                indicatorColor: AppColors.black,
-                                labelColor: AppColors.black,
-                                unselectedLabelColor:
-                                AppColors.defaultGrayColor,
-                                tabs: _getTabs())),
-                      )),
-                  body: TabBarView(
-                      controller: _tabController,
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      children: [
-                        TestRoomSimulator(
-                          activitiesModel: widget.homeWorkModel,
-                          testDetailModel:
-                          _simulatorTestProvider!.currentTestDetail,
-                          simulatorTestPresenter: _simulatorTestPresenter!,
-                          simulatorTestProvider: _simulatorTestProvider!, windowManagerProvider: _windowManagerProvider,
-                        ),
-                        HighLightHomeWorks(
-                            provider: Provider.of<MyTestProvider>(context,
-                                listen: false),
-                            homeWorkModel: widget.homeWorkModel!),
-                        OtherHomeWorks(
-                            provider: Provider.of<MyTestProvider>(context,
-                                listen: false),
-                            homeWorkModel: widget.homeWorkModel!)
-                      ]),
-                )))
+                child: Container(
+                    // margin: const EdgeInsets.symmetric(horizontal: 50, vertical: 20),
+                    margin: const EdgeInsets.fromLTRB(50, 50, 50, 20),
+                    child: Scaffold(
+                      backgroundColor: const Color.fromARGB(0, 255, 255, 255),
+                      appBar: PreferredSize(
+                          preferredSize: const Size.fromHeight(40),
+                          child: Container(
+                            margin: EdgeInsets.only(
+                                left: 50,
+                                right: (w < SizeLayout.MyTestScreenSize)
+                                    ? 0
+                                    : 600),
+                            child: DefaultTabController(
+                                initialIndex: 0,
+                                length: (provider.submitStatus ==
+                                        SubmitStatus.success)
+                                    ? 3
+                                    : 1,
+                                child: TabBar(
+                                    controller: _tabController,
+                                    indicator: BoxDecoration(
+                                        borderRadius: const BorderRadius.only(
+                                            topLeft: Radius.circular(5),
+                                            topRight: Radius.circular(5)),
+                                        border: Border.all(
+                                            color: AppColors.black, width: 2)),
+                                    indicatorColor: AppColors.black,
+                                    labelColor: AppColors.black,
+                                    unselectedLabelColor:
+                                        AppColors.defaultGrayColor,
+                                    tabs: _getTabs())),
+                          )),
+                      body: TabBarView(
+                          controller: _tabController,
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          children: [
+                            TestRoomSimulator(
+                              activitiesModel: widget.homeWorkModel,
+                              testDetailModel:
+                                  _simulatorTestProvider!.currentTestDetail,
+                              simulatorTestPresenter: _simulatorTestPresenter!,
+                              simulatorTestProvider: _simulatorTestProvider!, windowManagerProvider: _windowManagerProvider,
+                            ),
+                            HighLightHomeWorks(
+                                provider: Provider.of<MyTestProvider>(context,
+                                    listen: false),
+                                homeWorkModel: widget.homeWorkModel!),
+                            OtherHomeWorks(
+                                provider: Provider.of<MyTestProvider>(context,
+                                    listen: false),
+                                homeWorkModel: widget.homeWorkModel!)
+                          ]),
+                    )))
             : Container(
-          margin: const EdgeInsets.symmetric(horizontal: 30),
-          child: TestRoomSimulator(
-            activitiesModel: widget.homeWorkModel,
-            testDetailModel: _simulatorTestProvider!.currentTestDetail,
-            simulatorTestPresenter: _simulatorTestPresenter!,
-            simulatorTestProvider: _simulatorTestProvider!, windowManagerProvider: _windowManagerProvider,
-          ),
-        );
+                margin: const EdgeInsets.symmetric(horizontal: 30),
+                child: TestRoomSimulator(
+                  activitiesModel: widget.homeWorkModel,
+                  testDetailModel: _simulatorTestProvider!.currentTestDetail,
+                  simulatorTestPresenter: _simulatorTestPresenter!,
+                  simulatorTestProvider: _simulatorTestProvider!, windowManagerProvider: _windowManagerProvider,
+                ),
+              );
       }
     });
   }
@@ -706,28 +717,28 @@ class _SimulatorTestScreenState extends State<SimulatorTestScreen>
   Widget _buildDownloadAgain() {
     return Consumer<SimulatorTestProvider>(builder: (context, provider, child) {
       // if (provider.needDownloadAgain) {
-      return Visibility(
-        visible: provider.visibleDownloadAgain,
-        child: Expanded(
-          child: Container(
-            margin: const EdgeInsets.only(top: 50),
-            child: DownloadAgainWidget(
-              isOffline: isOffline,
-              onClickTryAgain: () {
-                if (_simulatorTestPresenter != null) {
-                  if (isOffline) {
-                    _simulatorTestProvider!.setVisibleDownloadAgain(true);
-                    Utils.instance().showConnectionErrorDialog(context);
-                  } else {
-                    _simulatorTestPresenter!.tryAgainToDownload();
-                    _simulatorTestProvider!.setVisibleDownloadAgain(false);
+        return Visibility(
+          visible: provider.visibleDownloadAgain,
+          child: Expanded(
+            child: Container(
+              margin: const EdgeInsets.only(top: 50),
+              child: DownloadAgainWidget(
+                isOffline: isOffline,
+                onClickTryAgain: () {
+                  if (_simulatorTestPresenter != null) {
+                    if (isOffline) {
+                      _simulatorTestProvider!.setVisibleDownloadAgain(true);
+                      Utils.instance().showConnectionErrorDialog(context);
+                    } else {
+                      _simulatorTestPresenter!.tryAgainToDownload();
+                      _simulatorTestProvider!.setVisibleDownloadAgain(false);
+                    }
                   }
-                }
-              },
+                },
+              ),
             ),
           ),
-        ),
-      );
+        );
       // } else {
       //   return const SizedBox();
       // }
@@ -828,7 +839,7 @@ class _SimulatorTestScreenState extends State<SimulatorTestScreen>
             description: Utils.instance()
                 .multiLanguage(StringConstants.network_error_message),
             okButtonTitle:
-            Utils.instance().multiLanguage(StringConstants.ok_button_title),
+                Utils.instance().multiLanguage(StringConstants.ok_button_title),
             cancelButtonTitle: Utils.instance()
                 .multiLanguage(StringConstants.exit_button_title),
             borderRadius: 8,

@@ -41,8 +41,7 @@ dependencies:
   video_player: ^2.8.6
   video_player_win: ^2.3.7
   video_player_macos: ^2.0.1
-  sqflite: ^2.3.3 #database local
-  sqflite_common_ffi: ^2.3.3
+  sqflite: ^2.2.6 #database local
   device_info_plus: ^9.0.2
   package_info_plus: ^4.0.2
  

@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:icorrect_pc/src/data_source/constants.dart';
 import 'package:icorrect_pc/src/data_source/local/app_shared_preferences_keys.dart';
 import 'package:icorrect_pc/src/data_source/local/app_shared_references.dart';
-import 'package:icorrect_pc/src/models/auth_models/student_merchant_model.dart';
 import 'package:icorrect_pc/src/presenters/login_presenter.dart';
 import 'package:icorrect_pc/src/presenters/verify_presenter.dart';
 import 'package:icorrect_pc/src/providers/auth_widget_provider.dart';
@@ -34,7 +33,7 @@ class _LoginVerifyState extends State<LoginVerifyWidget> implements LoginViewCon
   late AuthWidgetProvider _provider;
   VerifyProvider? _verifyProvider;
   LoginPresenter? _loginPresenter;
-  List<ClassModel> classes = [];
+  List<Datum> classes = [];
   String classID = '';
 
   final _txtUsernameController = TextEditingController();
@@ -158,7 +157,7 @@ class _LoginVerifyState extends State<LoginVerifyWidget> implements LoginViewCon
                     DropdownMenuEntry(value: value.classId, label: value.name)
                 ],
                 onSelected: (value) {
-                  // classID = value!;
+                  classID = value!;
                 },
                 hintText: StringConstants.select_class,
                 menuHeight: MediaQuery.of(context).size.height/4,
@@ -201,55 +200,5 @@ class _LoginVerifyState extends State<LoginVerifyWidget> implements LoginViewCon
         builder: (context) {
           return MessageDialog(context: context, message: message);
         });
-  }
-
-  @override
-  void onChangeDeviceNameComplete(String msg) {
-    // TODO: implement onChangeDeviceNameComplete
-  }
-
-  @override
-  void onChangeDeviceNameError(String msg) {
-    // TODO: implement onChangeDeviceNameError
-  }
-
-  @override
-  void onGetListClassComplete(List<ClassModel> list) {
-    // TODO: implement onGetListClassComplete
-  }
-
-  @override
-  void onGetListClassError(String message) {
-    // TODO: implement onGetListClassError
-  }
-
-  @override
-  void onGetListStudentComplete(List<StudentModel> list) {
-    // TODO: implement onGetListStudentComplete
-  }
-
-  @override
-  void onGetListStudentError(String message) {
-    // TODO: implement onGetListStudentError
-  }
-
-  @override
-  void onVerifyComplete(String merchantID) {
-    // TODO: implement onVerifyComplete
-  }
-
-  @override
-  void onVerifyConfigComplete() {
-    // TODO: implement onVerifyConfigComplete
-  }
-
-  @override
-  void onVerifyConfigError(String message) {
-    // TODO: implement onVerifyConfigError
-  }
-
-  @override
-  void onVerifyError(String message) {
-    // TODO: implement onVerifyError
   }
 }

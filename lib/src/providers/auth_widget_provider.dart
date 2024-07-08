@@ -2,6 +2,8 @@ import 'dart:collection';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:icorrect_pc/src/data_source/constants.dart';
+import 'package:icorrect_pc/src/views/screens/auth/login_screen.dart';
 import 'package:icorrect_pc/src/views/screens/verify/verify_screen.dart';
 
 class AuthWidgetProvider extends ChangeNotifier {
@@ -22,9 +24,9 @@ class AuthWidgetProvider extends ChangeNotifier {
     }
   }
 
-  // Widget _currentScreen = const LoginWidget();
+  Widget _currentScreen = const LoginWidget();
 
-  Widget _currentScreen = const VerifyWidget();
+  // Widget _currentScreen = const VerifyWidget();
 
   Widget get currentScreen => _currentScreen;
   void setCurrentScreen(Widget current) {

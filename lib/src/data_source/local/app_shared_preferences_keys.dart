@@ -4,8 +4,6 @@ enum AppSharedKeys {
   apiToken,
   merchantID,
   licenseKey,
-  deviceName,
-  classID,
   appVersion,
   currentUser,
   listClassFilter,

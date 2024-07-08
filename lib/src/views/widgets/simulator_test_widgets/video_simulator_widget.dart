@@ -18,7 +18,7 @@ class VideoSimulatorWidget extends StatefulWidget {
 
   // VideoSimulatorWidget({super.key, required this.onVideoEnd});
 
-  const VideoSimulatorWidget({super.key});
+  VideoSimulatorWidget({super.key});
 
   @override
   State<VideoSimulatorWidget> createState() => _VideoSimulatorWidgetState();

@@ -8,12 +8,11 @@ import '../../presenters/my_test_presenter.dart';
 import '../../presenters/simulator_test_presenter.dart';
 
 class DownloadAgainWidget extends StatefulWidget {
-  DownloadAgainWidget({super.key, required this.onClickTryAgain, required this.isOffline, this.visibleText, this.message});
+  const DownloadAgainWidget({super.key, required this.onClickTryAgain, required this.isOffline});
 
   final Function onClickTryAgain;
+
   final bool isOffline;
-  bool? visibleText;
-  String? message;
 
   @override
   State<DownloadAgainWidget> createState() => _DownloadAgainWidgetState();
@@ -43,7 +42,8 @@ class _DownloadAgainWidgetState extends State<DownloadAgainWidget> {
                   left: 40, top: 10, right: 40, bottom: 10),
               child: Center(
                 child: Text(
-                setMessage(),
+                  Utils.instance().multiLanguage(
+                      widget.isOffline ? StringConstants.error_during_test_offline : StringConstants.error_during_test_hasInternet),
                   textAlign: TextAlign.center,
                   style: const TextStyle(fontSize: 17),
                 ),
@@ -74,14 +74,5 @@ class _DownloadAgainWidgetState extends State<DownloadAgainWidget> {
         ),
       ),
     );
-  }
-
-  String setMessage() {
-    if (widget.message != null) {
-      return widget.message!;
-    } else {
-      return Utils.instance().multiLanguage(
-          widget.isOffline ? StringConstants.error_during_test_offline : StringConstants.error_during_test_hasInternet);
-    }
   }
 }

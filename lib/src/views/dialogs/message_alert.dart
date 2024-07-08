@@ -8,9 +8,8 @@ import '../../../core/app_colors.dart';
 class MessageDialog extends Dialog {
   BuildContext context;
   String message;
-  VoidCallback? onPressOK;
 
-  MessageDialog({required this.context, required this.message, this.onPressOK, super.key});
+  MessageDialog({required this.context, required this.message, super.key});
 
   @override
   double? get elevation => 0;
@@ -51,12 +50,7 @@ class MessageDialog extends Dialog {
               ),
               const SizedBox(height: 10),
               TextButton(
-                  onPressed: () {
-                    if (onPressOK != null) {
-                      onPressOK!();
-                    }
-                    Navigator.of(context).pop();
-                  },
+                  onPressed: () => Navigator.of(context).pop(),
                   style: TextButton.styleFrom(
                       padding: const EdgeInsets.all(0),
                       minimumSize: const Size(50, 30),

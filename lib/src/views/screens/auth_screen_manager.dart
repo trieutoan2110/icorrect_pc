@@ -26,18 +26,19 @@ class _AuthWidgetState extends State<AuthWidget> with WindowListener {
 
   @override
   void initState() {
+    super.initState();
     if (!windowManager.hasListeners) {
       windowManager.addListener(this);
       _init();
     }
     _windowManagerProvider = Provider.of<WindowManagerProvider>(context, listen: false);
-    super.initState();
   }
 
   @override
   void dispose() {
     windowManager.removeListener(this);
     super.dispose();
+    // _provider.dispose();
   }
 
   void _init() async {
@@ -48,7 +49,7 @@ class _AuthWidgetState extends State<AuthWidget> with WindowListener {
   }
 
   @override
-  void onWindowClose() {
+  void onWindowClose() async {
     super.onWindowClose();
     if (_windowManagerProvider.isShowExitAppDoingTest) {
       _windowManagerProvider.setShowExitApp(false);
@@ -58,9 +59,15 @@ class _AuthWidgetState extends State<AuthWidget> with WindowListener {
     _showConfirmExitApp();
   }
 
+  @override
+  void onWindowFocus() {
+    // Make sure to call once.
+    setState(() {});
+    // do something
+  }
+
   void _showConfirmExitApp() async {
     if (_dialogNotShowing && _windowManagerProvider.isShowExitApp) {
-      _dialogNotShowing = false;
       showDialog(
         context: context,
         barrierDismissible: false,

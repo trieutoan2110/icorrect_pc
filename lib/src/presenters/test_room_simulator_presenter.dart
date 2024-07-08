@@ -79,7 +79,7 @@ class TestRoomSimulatorPresenter {
 
       if (topic.files.isNotEmpty && topic.questionList.isNotEmpty) {
         PlayListModel playListIntro =
-        _setPlayListModel(topic, PlayListType.introduce);
+            _setPlayListModel(topic, PlayListType.introduce);
 
         playList.add(playListIntro);
       }
@@ -105,7 +105,7 @@ class TestRoomSimulatorPresenter {
 
       if (topic.fileEndOfTest.url.isNotEmpty) {
         PlayListModel playListEndOfTest =
-        _setPlayListModel(topic, PlayListType.endOfTest);
+            _setPlayListModel(topic, PlayListType.endOfTest);
         playList.add(playListEndOfTest);
       }
     }
@@ -131,7 +131,7 @@ class TestRoomSimulatorPresenter {
       playListModel.numPart = topic.numPart;
       playListModel.questionContent = PlayListType.introduce.name;
       playListModel.fileIntro =
-      topic.files.isNotEmpty ? topic.files.first.url : "";
+          topic.files.isNotEmpty ? topic.files.first.url : "";
     } else if (playListType == PlayListType.endOfTakeNote) {
       playListModel.numPart = PartOfTest.part2.get;
       playListModel.endOfTakeNote = topic.endOfTakeNote.url;
@@ -148,24 +148,24 @@ class TestRoomSimulatorPresenter {
       playListModel.cueCard = question != null ? question.cueCard : '';
       playListModel.questionId = question!.id;
       playListModel.isFollowUp =
-      question != null ? question.isFollowUpQuestion() : false;
+          question != null ? question.isFollowUpQuestion() : false;
       List<FileTopicModel> files = question != null ? question.files : [];
       playListModel.questionTopicModel = question;
       if (kDebugMode) {
         print(
             'question length: ${playListModel.questionTopicModel.answers.length}');
         for (int i = 0;
-        i < playListModel.questionTopicModel.answers.length;
-        i++) {
+            i < playListModel.questionTopicModel.answers.length;
+            i++) {
           print('answers: ${playListModel.questionTopicModel.answers[i].url}');
         }
       }
       playListModel.fileQuestionNormal = files.first.url;
       playListModel.fileQuestionSlow =
-      files.length > 1 ? files.last.url : playListModel.fileQuestionNormal;
+          files.length > 1 ? files.last.url : playListModel.fileQuestionNormal;
       List<FileTopicModel> filesImage = _getFilesImage(files);
       playListModel.fileImage =
-      filesImage.isNotEmpty ? filesImage.first.url : '';
+          filesImage.isNotEmpty ? filesImage.first.url : '';
     }
 
     return playListModel;
@@ -174,7 +174,7 @@ class TestRoomSimulatorPresenter {
   List<FileTopicModel> _getFilesImage(List<FileTopicModel> files) {
     return files
         .where((element) =>
-    Utils.instance().mediaType(element.url) == MediaType.image)
+            Utils.instance().mediaType(element.url) == MediaType.image)
         .toList();
   }
 
@@ -199,10 +199,10 @@ class TestRoomSimulatorPresenter {
   Future playingIntroduce(String file) async {
     assert(_view != null && _repository != null);
     bool isExist =
-    await FileStorageHelper.newCheckExistFile(file, MediaType.video);
+        await FileStorageHelper.checkExistFile(file, MediaType.video, null);
     if (isExist) {
       String filePath =
-      await FileStorageHelper.newGetFilePath(file, MediaType.video);
+          await FileStorageHelper.getFilePath(file, MediaType.video, null);
       _view!.playFileVideo(File(filePath));
     } else {
       //Handle have not file introduce
@@ -215,12 +215,12 @@ class TestRoomSimulatorPresenter {
 
   Future playingQuestion(String fileNormal) async {
     assert(_view != null && _repository != null);
-    bool isExistFileNormal = await FileStorageHelper.newCheckExistFile(
-        fileNormal, MediaType.video);
+    bool isExistFileNormal = await FileStorageHelper.checkExistFile(
+        fileNormal, MediaType.video, null);
 
     if (isExistFileNormal) {
-      String normalPath = await FileStorageHelper.newGetFilePath(
-          fileNormal, MediaType.video);
+      String normalPath = await FileStorageHelper.getFilePath(
+          fileNormal, MediaType.video, null);
       _view!.playFileVideo(File(normalPath));
     } else {
       //Handle have not file question
@@ -234,10 +234,10 @@ class TestRoomSimulatorPresenter {
   Future playingEndOfTakeNote(String file) async {
     assert(_view != null && _repository != null);
     bool isExist =
-    await FileStorageHelper.newCheckExistFile(file, MediaType.video);
+        await FileStorageHelper.checkExistFile(file, MediaType.video, null);
     if (isExist) {
       String filePath =
-      await FileStorageHelper.newGetFilePath(file, MediaType.video);
+          await FileStorageHelper.getFilePath(file, MediaType.video, null);
 
       _view!.playFileVideo(File(filePath));
     } else {
@@ -252,10 +252,10 @@ class TestRoomSimulatorPresenter {
   Future playingEndOfTest(String file) async {
     assert(_view != null && _repository != null);
     bool isExist =
-    await FileStorageHelper.newCheckExistFile(file, MediaType.video);
+        await FileStorageHelper.checkExistFile(file, MediaType.video, null);
     if (isExist) {
       String filePath =
-      await FileStorageHelper.newGetFilePath(file, MediaType.video);
+          await FileStorageHelper.getFilePath(file, MediaType.video, null);
       _view!.playFileVideo(File(filePath));
     } else {
       //Handle have not file introduce
@@ -268,13 +268,13 @@ class TestRoomSimulatorPresenter {
 
   Timer startCountDown(
       {required BuildContext context,
-        required int count,
-        required bool isPart2, required String question}) {
+      required int count,
+      required bool isPart2, required String question}) {
     print('DEBUG RECORD: - timer count down start question: ${question}');
     Map<String, dynamic> data = {
       StringConstants.k_question_content: 'question: ${question}'
     };
-    _createLog(context: context, action: LogEvent.debugCallStartCountdown, data: data);
+    _createLog(context: context, action: LogEvent.debugStartCountdown, data: data);
     assert(_view != null && _repository != null);
     const oneSec = Duration(seconds: 1);
     return Timer.periodic(oneSec, (Timer timer) {
@@ -302,8 +302,8 @@ class TestRoomSimulatorPresenter {
 
   Timer startCountDownForCueCard(
       {required BuildContext context,
-        required int count,
-        required bool isPart2}) {
+      required int count,
+      required bool isPart2}) {
     bool finishCountDown = false;
     const oneSec = Duration(seconds: 1);
     return Timer.periodic(oneSec, (Timer timer) {
@@ -359,13 +359,13 @@ class TestRoomSimulatorPresenter {
 
   Future submitMyTest(
       {required BuildContext context,
-        required String testId,
-        required String activityId,
-        required List<QuestionTopicModel> questionsList,
-        File? videoConfirmFile,
-        List<Map<String, dynamic>>? logAction,
-        required bool isUpdate,
-        required bool isExam}) async {
+      required String testId,
+      required String activityId,
+      required List<QuestionTopicModel> questionsList,
+      File? videoConfirmFile,
+      List<Map<String, dynamic>>? logAction,
+      required bool isUpdate,
+      required bool isExam}) async {
     assert(_view != null && _repository != null);
 
     //Add log
@@ -379,13 +379,13 @@ class TestRoomSimulatorPresenter {
 
     http.MultipartRequest multiRequest = await Utils.instance()
         .formDataRequestSubmit(
-        testId: testId,
-        activityId: activityId,
-        questions: questionsList,
-        isExam: isExam,
-        isUpdate: isUpdate,
-        videoConfirmFile: videoConfirmFile,
-        logAction: logAction);
+            testId: testId,
+            activityId: activityId,
+            questions: questionsList,
+            isExam: isExam,
+            isUpdate: isUpdate,
+            videoConfirmFile: videoConfirmFile,
+            logAction: logAction);
     try {
       _repository!.submitTest(multiRequest).then((value) {
         if (kDebugMode) {
@@ -462,10 +462,10 @@ class TestRoomSimulatorPresenter {
   }
 
   void callTestPositionApi(
-      BuildContext context, {
-        required String activityId,
-        required int questionIndex,
-      }) async {
+    BuildContext context, {
+    required String activityId,
+    required int questionIndex,
+  }) async {
     UserDataModel? currentUser = await Utils.instance().getCurrentUser();
     if (null == currentUser) return;
 
@@ -486,11 +486,11 @@ class TestRoomSimulatorPresenter {
 
     _repository!
         .callTestPosition(
-        email: email,
-        activityId: activityId,
-        questionIndex: questionIndex,
-        user: testPositionUser,
-        pass: testPositionPass)
+            email: email,
+            activityId: activityId,
+            questionIndex: questionIndex,
+            user: testPositionUser,
+            pass: testPositionPass)
         .then((value) async {
       if (kDebugMode) {
         print("DEBUG: callTestPosition $value");
@@ -522,7 +522,7 @@ class TestRoomSimulatorPresenter {
           log: log,
           data: null,
           message:
-          "CallTestPositionApi error: ${dataMap[StringConstants.k_error_code]}${dataMap[StringConstants.k_status]}",
+              "CallTestPositionApi error: ${dataMap[StringConstants.k_error_code]}${dataMap[StringConstants.k_status]}",
           status: LogEvent.failed,
         );
       }
