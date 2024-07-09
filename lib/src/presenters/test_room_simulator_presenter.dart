@@ -198,11 +198,15 @@ class TestRoomSimulatorPresenter {
 
   Future playingIntroduce(String file) async {
     assert(_view != null && _repository != null);
+    // bool isExist =
+    //     await FileStorageHelper.checkExistFile(file, MediaType.video, null);
     bool isExist =
-        await FileStorageHelper.checkExistFile(file, MediaType.video, null);
+        await FileStorageHelper.newCheckExistFile(file, MediaType.video);
     if (isExist) {
+      // String filePath =
+      //     await FileStorageHelper.getFilePath(file, MediaType.video, null);
       String filePath =
-          await FileStorageHelper.getFilePath(file, MediaType.video, null);
+      await FileStorageHelper.newGetFilePath(file, MediaType.video);
       _view!.playFileVideo(File(filePath));
     } else {
       //Handle have not file introduce
@@ -215,12 +219,17 @@ class TestRoomSimulatorPresenter {
 
   Future playingQuestion(String fileNormal) async {
     assert(_view != null && _repository != null);
-    bool isExistFileNormal = await FileStorageHelper.checkExistFile(
-        fileNormal, MediaType.video, null);
+    // bool isExistFileNormal = await FileStorageHelper.checkExistFile(
+    //     fileNormal, MediaType.video, null);
+
+    bool isExistFileNormal = await FileStorageHelper.newCheckExistFile(
+        fileNormal, MediaType.video);
 
     if (isExistFileNormal) {
-      String normalPath = await FileStorageHelper.getFilePath(
-          fileNormal, MediaType.video, null);
+      // String normalPath = await FileStorageHelper.getFilePath(
+      //     fileNormal, MediaType.video, null);
+      String normalPath = await FileStorageHelper.newGetFilePath(
+          fileNormal, MediaType.video);
       _view!.playFileVideo(File(normalPath));
     } else {
       //Handle have not file question
@@ -233,11 +242,15 @@ class TestRoomSimulatorPresenter {
 
   Future playingEndOfTakeNote(String file) async {
     assert(_view != null && _repository != null);
+    // bool isExist =
+    //     await FileStorageHelper.checkExistFile(file, MediaType.video, null);
     bool isExist =
-        await FileStorageHelper.checkExistFile(file, MediaType.video, null);
+      await FileStorageHelper.newCheckExistFile(file, MediaType.video);
     if (isExist) {
+      // String filePath =
+      //     await FileStorageHelper.getFilePath(file, MediaType.video, null);
       String filePath =
-          await FileStorageHelper.getFilePath(file, MediaType.video, null);
+        await FileStorageHelper.newGetFilePath(file, MediaType.video);
 
       _view!.playFileVideo(File(filePath));
     } else {
@@ -251,11 +264,15 @@ class TestRoomSimulatorPresenter {
 
   Future playingEndOfTest(String file) async {
     assert(_view != null && _repository != null);
+    // bool isExist =
+    //     await FileStorageHelper.checkExistFile(file, MediaType.video, null);
     bool isExist =
-        await FileStorageHelper.checkExistFile(file, MediaType.video, null);
+    await FileStorageHelper.newCheckExistFile(file, MediaType.video);
     if (isExist) {
+      // String filePath =
+      //     await FileStorageHelper.getFilePath(file, MediaType.video, null);
       String filePath =
-          await FileStorageHelper.getFilePath(file, MediaType.video, null);
+      await FileStorageHelper.newGetFilePath(file, MediaType.video);
       _view!.playFileVideo(File(filePath));
     } else {
       //Handle have not file introduce

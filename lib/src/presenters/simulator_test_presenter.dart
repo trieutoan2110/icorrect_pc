@@ -370,6 +370,8 @@ class SimulatorTestPresenter {
           MediaType mediaType = Utils.instance().mediaType(fileTopic);
           bool isExist = await FileStorageHelper.newCheckExistFile(
               fileTopic, mediaType);
+          // bool isExist = await FileStorageHelper.checkExistFile(
+          //       fileTopic, mediaType, null);
           savePath =
           '${await FileStorageHelper.getFolderPath(mediaType, null)}\\$fileTopic';
           if (fileType.isNotEmpty && !isExist) {
