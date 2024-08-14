@@ -315,9 +315,9 @@ class _SimulatorTestScreenState extends State<SimulatorTestScreen>
     _simulatorTestPresenter!.closeClientRequest();
     _simulatorTestPresenter!.resetAutoRequestDownloadTimes();
     _windowManagerProvider.setShowExitAppDoingTest(false);
-    if (context.mounted) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       _simulatorTestProvider!.resetAll();
-    }
+    },);
   }
 
   void _createLog(
@@ -1125,5 +1125,56 @@ class _SimulatorTestScreenState extends State<SimulatorTestScreen>
     if (!_simulatorTestProvider!.isTestRoom) {
       _simulatorTestProvider!.setVisibleDownloadAgain(true);
     }
+  }
+
+  //FOR TOOL
+  @override
+  void onLoginForToolError() {
+    _simulatorTestProvider!.setFailLogin();
+  }
+
+  @override
+  void onLoginForToolSuccess(String token, String email) {
+    _simulatorTestProvider!.setSuccessLogin();
+    _simulatorTestPresenter!.getTestDetailByHomeworkForTool(context, widget.homeWorkModel!.activityId.toString(), token, email);
+    _simulatorTestProvider!.setCallCreateTest();
+  }
+
+  @override
+  void onGetTestDetailCompleteForTool(String testID, String token, String email) {
+    String activityId = "";
+    if (widget.homeWorkModel != null) {
+      activityId = widget.homeWorkModel!.activityId.toString();
+    }
+    _simulatorTestProvider!.setSuccessCreateTest();
+
+    _simulatorTestProvider!.setCallSubmitTest();
+    print(testID);
+    _simulatorTestPresenter!.submitTestForTool(context: context,
+        testId: testID,
+        activityId: activityId,
+        questions: _simulatorTestProvider!.questionList,
+        isExam: _isExam,
+        isUpdate: true,
+        logAction: _simulatorTestProvider!.logActions, token: token, email: email);
+  }
+
+  @override
+  void onGetTestDetailErrorForTool() {
+    _simulatorTestProvider!.setFailCreateTest();
+  }
+
+  @override
+  void onSubmitTestFailForTool(String token, String testId, String email) {
+    _simulatorTestProvider!.setFailSubmitTest();
+    if (!_simulatorTestProvider!.isSubmitAgain) {
+      _simulatorTestProvider!.setUserSubmitFail(
+          {'token': token, 'testId': testId, 'email': email});
+    }
+  }
+
+  @override
+  void onSubmitTestSuccessForTool() {
+    _simulatorTestProvider!.setSuccessSubmitTest();
   }
 }

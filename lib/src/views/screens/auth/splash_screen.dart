@@ -3,22 +3,15 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:icorrect_pc/core/app_assets.dart';
-import 'package:icorrect_pc/main.dart';
-import 'package:icorrect_pc/src/models/user_data_models/user_data_model.dart';
-import 'package:icorrect_pc/src/models/user_data_models/user_info_model.dart';
 import 'package:icorrect_pc/src/presenters/auth_presenter.dart';
 import 'package:icorrect_pc/src/utils/utils.dart';
 import 'package:icorrect_pc/src/views/screens/auth_screen_manager.dart';
 import 'package:icorrect_pc/src/views/screens/main_screen_manager.dart';
-import 'package:provider/provider.dart';
 
 import '../../../../core/app_colors.dart';
 import '../../../data_source/local/app_shared_preferences_keys.dart';
 import '../../../data_source/local/app_shared_references.dart';
-import '../../../providers/main_widget_provider.dart';
-import '../../../utils/navigations.dart';
 import '../../dialogs/message_alert.dart';
-import '../home/home_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -118,6 +111,6 @@ class _SplashScreenState extends State<SplashScreen> implements AuthConstract {
 
   @override
   void onGetAppConfigInfoSuccess() {
-    _autoLogin();
+    // _autoLogin();
   }
 }

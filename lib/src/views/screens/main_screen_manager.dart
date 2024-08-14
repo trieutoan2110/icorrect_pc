@@ -30,7 +30,6 @@ class _MainWidgetState extends State<MainWidget>{
 
   late MainWidgetProvider _provider;
   var _scaffoldKey = GlobalKey<ScaffoldState>();
-  bool _dialogNotShowing = true;
 
   @override
   void initState() {

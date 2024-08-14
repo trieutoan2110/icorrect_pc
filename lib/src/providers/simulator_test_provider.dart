@@ -971,7 +971,151 @@ class SimulatorTestProvider extends ChangeNotifier {
     _downloadFullData = false;
     _listSavePath.clear();
     _packageID = 0;
+    _indexUser = 0;
+    if (!isDisposed) {
+      notifyListeners();
+    }
+  }
 
+  //TEST LOGIN, CREATE AND SUBMIT
+
+  int _callLogin = 0;
+  int get callLogin => _callLogin;
+
+  void setCallLogin() {
+    _callLogin++;
+    if (!isDisposed) {
+      notifyListeners();
+    }
+  }
+
+  int _successLogin = 0;
+  int get successLogin => _successLogin;
+
+  void setSuccessLogin() {
+    _successLogin++;
+    if (!isDisposed) {
+      notifyListeners();
+    }
+  }
+
+  int _failLogin = 0;
+  int get failLogin => _failLogin;
+
+  void setFailLogin() {
+    _failLogin++;
+    if (!isDisposed) {
+      notifyListeners();
+    }
+  }
+
+  int _callCreateTest = 0;
+  int get callCreateTest => _callCreateTest;
+
+  void setCallCreateTest() {
+    _callCreateTest++;
+    if (!isDisposed) {
+      notifyListeners();
+    }
+  }
+
+  int _successCreateTest = 0;
+  int get successCreateTest => _successCreateTest;
+
+  void setSuccessCreateTest() {
+    _successCreateTest++;
+    if (!isDisposed) {
+      notifyListeners();
+    }
+  }
+
+  int _failCreateTest = 0;
+  int get failCreateTest => _failCreateTest;
+
+  void setFailCreateTest() {
+    _failCreateTest++;
+    if (!isDisposed) {
+      notifyListeners();
+    }
+  }
+
+  int _callSubmitTest = 0;
+  int get callSubmitTest => _callSubmitTest;
+
+  void setCallSubmitTest() {
+    _callSubmitTest++;
+    if (!isDisposed) {
+      notifyListeners();
+    }
+  }
+
+  int _successSubmitTest = 0;
+  int get successSubmitTest => _successSubmitTest;
+
+  void setSuccessSubmitTest() {
+    _successSubmitTest++;
+    if (!isDisposed) {
+      notifyListeners();
+    }
+  }
+
+  int _failSubmitTest = 0;
+  int get failSubmitTest => _failSubmitTest;
+
+  void setFailSubmitTest() {
+    _failSubmitTest++;
+    if (!isDisposed) {
+      notifyListeners();
+    }
+  }
+
+  int _indexUser = 0;
+  int get indexUser => _indexUser;
+
+  void setIndexUser() {
+    _indexUser++;
+    if (!isDisposed) {
+      notifyListeners();
+    }
+  }
+
+  List<Map<String, dynamic>> _userSubmitFail = [];
+  List<Map<String, dynamic>> get userSubmitFail => _userSubmitFail;
+
+  void setUserSubmitFail(Map<String, dynamic> user) {
+    _userSubmitFail.add(user);
+    if (!isDisposed) {
+      notifyListeners();
+    }
+  }
+
+  void resetListUserSubmitFail() {
+    _userSubmitFail.clear();
+    if (!isDisposed) {
+      notifyListeners();
+    }
+  }
+
+  bool _isSubmitAgain = false;
+  bool get isSubmitAgain => _isSubmitAgain;
+
+  void setSubmitAgainStatus(bool stt) {
+    _isSubmitAgain = stt;
+    if (!isDisposed) {
+      notifyListeners();
+    }
+  }
+
+  void resetAllValue() {
+    _callCreateTest = 0;
+    _callSubmitTest = 0;
+    _successCreateTest = 0;
+    _successSubmitTest = 0;
+    _failCreateTest = 0;
+    _failSubmitTest = 0;
+    _callLogin = 0;
+    _failLogin = 0;
+    _successLogin = 0;
     if (!isDisposed) {
       notifyListeners();
     }

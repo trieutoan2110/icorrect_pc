@@ -14,8 +14,11 @@ import 'package:icorrect_pc/src/models/simulator_test_models/file_path_model.dar
 import '../data_source/api_urls.dart';
 import '../data_source/constants.dart';
 import '../data_source/dependency_injection.dart';
+import '../data_source/local/app_shared_preferences_keys.dart';
+import '../data_source/local/app_shared_references.dart';
 import '../data_source/local/file_storage_helper.dart';
 import '../data_source/repositories/simulator_test_repository.dart';
+import '../models/auth_models/auth_model.dart';
 import '../models/auth_models/video_record_exam_info.dart';
 import '../models/homework_models/new_api_135/activity_answer_model.dart';
 import '../models/log_models/log_model.dart';
@@ -47,6 +50,19 @@ abstract class SimulatorTestViewContract {
 
   void onSubmitTestFail(String msg);
 
+  //FOR TOOL
+  void onSubmitTestSuccessForTool();
+
+  void onSubmitTestFailForTool(String token, String testId, String email);
+
+  void onLoginForToolSuccess(String token, String email);
+
+  void onLoginForToolError();
+
+  void onGetTestDetailCompleteForTool(String testID, String token, String email);
+
+  void onGetTestDetailErrorForTool();
+
   void onReDownload();
 
   void onTryAgainToDownload();
@@ -59,6 +75,8 @@ abstract class SimulatorTestViewContract {
 class SimulatorTestPresenter {
   final SimulatorTestViewContract? _view;
   SimulatorTestRepository? _testRepository;
+  final Completer<void> _cancelCompleter = Completer<void>();
+  bool _cancelled = false;
 
   SimulatorTestPresenter(this._view) {
     _testRepository = Injector().getTestRepository();
@@ -173,6 +191,290 @@ class SimulatorTestPresenter {
             .multiLanguage(StringConstants.network_error_message));
       },
     );
+  }
+
+  //FOR TOOL
+  Future<void> loginForTool(
+      BuildContext context, String email, String password) async {
+    assert(_view != null && _testRepository != null);
+
+    LogModel? log;
+    Map<String, dynamic> logData = {};
+    if (context.mounted) {
+      log = await Utils.instance()
+          .prepareToCreateLog(context, action: LogEvent.callApiLogin);
+    }
+    if (_cancelled) return;
+
+    _testRepository!.loginForTool(email, password).then((value) async {
+      logData = jsonDecode(value);
+      AuthModel authModel = AuthModel.fromJson(jsonDecode(value));
+      if (authModel.errorCode == 200) {
+        //Add log
+        Utils.instance().prepareLogData(
+          log: log,
+          data: jsonDecode(value),
+          message: authModel.message,
+          status: LogEvent.success,
+        );
+        // ignore: use_build_context_synchronously
+        // _getUserInfo(context);
+        _view!.onLoginForToolSuccess(authModel.data.accessToken, email);
+      } else if (authModel.errorCode == 401) {
+        //Add log
+        Utils.instance().prepareLogData(
+          log: log,
+          data: jsonDecode(value),
+          message: authModel.status,
+          status: LogEvent.failed,
+        );
+        _view!.onLoginForToolError();
+      } else {
+        if (authModel.message.isNotEmpty) {
+          _view!.onLoginForToolError();
+          //Add log
+          Utils.instance().prepareLogData(
+            log: log,
+            data: jsonDecode(value),
+            message: StringConstants.network_error_message,
+            status: LogEvent.failed,
+          );
+        } else {
+          _view!.onLoginForToolError();
+          //Add log
+          Utils.instance().prepareLogData(
+            log: log,
+            data: jsonDecode(value),
+            message: '${authModel.errorCode}: ${authModel.status}',
+            status: LogEvent.failed,
+          );
+        }
+      }
+    }).catchError((onError) {
+      if (onError is http.ClientException || onError is SocketException) {
+        _view!.onLoginForToolError();
+        //Add log
+        Utils.instance().prepareLogData(
+          log: log,
+          data: logData,
+          message: 'Call loginFail: ${onError.toString()}',
+          status: LogEvent.failed,
+        );
+      } else {
+        _view!.onLoginForToolError();
+        //Add log
+        Utils.instance().prepareLogData(
+          log: log,
+          data: logData,
+          message: 'Call loginFail: ${onError.toString()}',
+          status: LogEvent.failed,
+        );
+      }
+    });
+  }
+
+  void getTestDetailByHomeworkForTool(BuildContext context, String homeworkId, String token, String email) async {
+    UserDataModel? currentUser = await Utils.instance().getCurrentUser();
+    if (currentUser == null) {
+      _view!.onGetTestDetailErrorForTool();
+      return;
+    }
+
+    String distributeCode = currentUser.userInfoModel.distributorCode;
+
+    LogModel? log;
+    Map<dynamic, dynamic> logData = {};
+    String valueData = '';
+    if (context.mounted) {
+      log = await Utils.instance()
+          .prepareToCreateLog(context, action: LogEvent.callApiGetTestDetail);
+    }
+    if (_cancelled) return;
+    _testRepository!
+        .getTestDetailByHomeWorkForTool(homeworkId, distributeCode, token)
+        .then((value) async {
+          valueData = value;
+      Map<String, dynamic> map = jsonDecode(value);
+      if (kDebugMode) {
+        print("DEBUG: get detail test $value");
+      }
+      if (map['error_code'] == 200) {
+        Map<String, dynamic> dataMap = map['data'];
+        TestDetailModel tempTestDetailModel = TestDetailModel(testId: 0);
+        tempTestDetailModel = TestDetailModel.fromJson(dataMap);
+        testDetail = TestDetailModel.fromJson(dataMap);
+
+        _prepareTopicList(tempTestDetailModel);
+
+        //Add log
+        Utils.instance().prepareLogData(
+          log: log,
+          data: jsonDecode(value),
+          message: null,
+          status: LogEvent.success,
+        );
+
+        List<FileTopicModel> tempFilesTopic =
+        _prepareFileTopicListForDownload(tempTestDetailModel);
+
+        filesTopic = _prepareFileTopicListForDownload(tempTestDetailModel);
+
+        downloadFiles(context, tempTestDetailModel, tempFilesTopic,
+            activityId: homeworkId);
+
+        _view!.onGetTestDetailCompleteForTool(testDetail!.testId.toString(), token, email);
+      } else {
+        //Add log
+        Utils.instance().prepareLogData(
+          log: log,
+          data: jsonDecode(value),
+          message:
+          "Loading homework detail error: ${map[StringConstants.k_error_code]} ${map[StringConstants.k_status]}",
+          status: LogEvent.failed,
+        );
+
+        _view!.onGetTestDetailErrorForTool();
+      }
+    }).catchError(
+      // ignore: invalid_return_type_for_catch_error
+          (onError) {
+        //Add log
+        Utils.instance().prepareLogData(
+          log: log,
+          data: {'error': valueData},
+          message: onError.toString(),
+          status: LogEvent.failed,
+        );
+        _view!.onGetTestDetailErrorForTool();
+      },
+    );
+  }
+
+  Future<void> submitTestForTool({
+    required BuildContext context,
+    required String testId,
+    required String activityId,
+    required List<QuestionTopicModel> questions,
+    required bool isExam,
+    required bool isUpdate,
+    File? videoConfirmFile,
+    List<Map<String, dynamic>>? logAction,
+    required String token, required String email
+  }) async {
+    assert(_view != null && _testRepository != null);
+
+    //Add log
+    LogModel? log;
+    Map<String, dynamic> dataLog = {};
+
+    if (context.mounted) {
+      log = await Utils.instance()
+          .prepareToCreateLog(context, action: LogEvent.callApiSubmitTest);
+    }
+
+    http.MultipartRequest multiRequest = await Utils.instance()
+        .formDataRequestSubmitForTool(
+        testId: testId,
+        activityId: activityId,
+        questions: questions,
+        isUpdate: isUpdate,
+        isExam: isExam,
+        videoConfirmFile: videoConfirmFile,
+        logAction: logAction,
+      token: token
+    );
+    if (_cancelled) return;
+    String jsonValue = '';
+    try {
+      _testRepository!.submitTest(multiRequest).then((value) {
+        jsonValue = value;
+        if (kDebugMode) {
+          print("DEBUG: submit response: ${value == '' ? 'aaa' : value}");
+          print('DEBUG: submit response test_id: $testId');
+        }
+
+        dataLog = {
+          'email': email,
+          'submit response': value
+        };
+
+        Map<String, dynamic> json = jsonDecode(value) ?? {};
+        if (json['error_code'] == 200) {
+          //ActivityAnswer activityAnswer = json[''];
+          //Add log
+          Utils.instance().prepareLogData(
+            log: log,
+            data: dataLog,
+            message: null,
+            status: LogEvent.success,
+          );
+          _view!.onSubmitTestSuccessForTool();
+        } else {
+          //Add log
+          Utils.instance().prepareLogData(
+            log: log,
+            data: dataLog,
+            message: StringConstants.submit_test_error_message,
+            status: LogEvent.failed,
+          );
+          // String errorCode = "";
+          // if (json[StringConstants.k_error_code] != null) {
+          //   errorCode = " [Error Code: ${json[StringConstants.k_error_code]}]";
+          // }
+          _view!.onSubmitTestFailForTool(token, testId, email);
+        }
+      }).catchError((onError) {
+        //Add log
+        Utils.instance().prepareLogData(
+          log: log,
+          data: {'response error11111: ': jsonValue, 'testId: ' : testId, 'email: ' : email},
+          message: onError.toString(),
+          status: LogEvent.failed,
+        );
+
+        _view!.onSubmitTestFailForTool(token, testId, email);
+      });
+    } on TimeoutException {
+      //Add log
+      Utils.instance().prepareLogData(
+        log: log,
+        data: dataLog,
+        message: StringConstants.submit_test_error_timeout,
+        status: LogEvent.failed,
+      );
+      _view!.onSubmitTestFailForTool(token, testId, email);
+    } on SocketException {
+      //Add log
+      Utils.instance().prepareLogData(
+        log: log,
+        data: dataLog,
+        message: StringConstants.submit_test_error_socket,
+        status: LogEvent.failed,
+      );
+      _view!.onSubmitTestFailForTool(token, testId, email);
+    } on http.ClientException {
+      //Add log
+      Utils.instance().prepareLogData(
+        log: log,
+        data: dataLog,
+        message: StringConstants.submit_test_error_client,
+        status: LogEvent.failed,
+      );
+      _view!.onSubmitTestFailForTool(token, testId, email);
+    }
+  }
+
+  void cancelRequests() {
+    if (!_cancelCompleter.isCompleted) {
+      _cancelCompleter.complete(); // Hủy bỏ tất cả các yêu cầu
+      _cancelled = true;
+    }
+  }
+
+  void continueRequests() {
+    if (_cancelCompleter.isCompleted) {
+      _cancelled = false;
+    }
   }
 
 //////////////////////////GET TEST DETAIL BY PRACTICE/////////////////////////
@@ -370,6 +672,7 @@ class SimulatorTestPresenter {
           MediaType mediaType = Utils.instance().mediaType(fileTopic);
           bool isExist = await FileStorageHelper.newCheckExistFile(
               fileTopic, mediaType);
+          // bool isExist = await FileStorageHelper.checkExistFile(
           // bool isExist = await FileStorageHelper.checkExistFile(
           //       fileTopic, mediaType, null);
           savePath =

@@ -51,12 +51,13 @@ class _LoginState extends State<LoginWidget> implements LoginViewContract {
     Timer(const Duration(milliseconds: 2000), () async {
       if (token.isNotEmpty) {
         _loading!.hide();
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(
-            builder: (_) => MainWidget(),
-          ),
-          ModalRoute.withName('/'),
-        );
+        // Navigator.of(context).pushAndRemoveUntil(
+        //   MaterialPageRoute(
+        //     builder: (_) => MainWidget(),
+        //   ),
+        //   ModalRoute.withName('/'),
+        // );
+        Navigator.push(context, MaterialPageRoute(builder: (context) => MainWidget(),));
       } else {
         _loading!.hide();
       }
